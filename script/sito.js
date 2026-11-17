@@ -1054,7 +1054,7 @@
       try { const sb = await db(); const { data } = await sb.from(T('riservati')).select('dati').eq('id', 'accademia').maybeSingle(); ACCAD = data?.dati || null; } catch {}
       if (!ACCAD) { box.innerHTML = `<div class="cmd-porta blocco"><div class="cmd-lucchetto">${LUCCHETTO}</div><small>Accademia riservata</small><h2>Contenuto non disponibile</h2><p>Calendario e percorso dell'accademia si caricano solo per i membri verificati della LSPD. Accedi con Discord e riprova.</p></div>`; return; }
     }
-    await caricaMioLibretto();
+    await Promise.all([caricaMioLibretto(), caricaComunicazioni()]);
     renderAccademia();
     clearInterval(accTimer); accTimer = setInterval(() => { if (vista === 'accademia' && !document.hidden) aggiornaProssima(); }, 1000);
   }
@@ -1143,6 +1143,86 @@
     if (d.value && new Date(d.value) > new Date()) { toast('La data di assunzione non può essere nel futuro', 'ko'); d.value = libDati().assunto; return; }
     const L = { ...libDati(), assunto: d.value }; LIB.dati = L; LIB.sporco = true; LS.set('lspd-libretto-bozza', L); ridisegnaLib();
   });
+  /* ── comunicazioni dell'Accademia: le scrive il Comando ── */
+  let COM = [];
+  const COM_VISTO = () => LS.get('lspd-com-visto', 0);
+  async function caricaComunicazioni() {
+    try { const sb = await db(); const { data, error } = await sb.from(T('comunicazioni')).select('*').order('fissata', { ascending: false }).order('creato', { ascending: false }).limit(60); COM = error || !Array.isArray(data) ? [] : data; } catch { COM = []; }
+    COM.sort((a, b) => (b.fissata === true) - (a.fissata === true) || new Date(b.creato) - new Date(a.creato));
+  }
+  // testo incollato da Discord: **grassetto**, __sottolineato__, *corsivo*, # titoli, elenchi e citazioni
+  function discordMd(t) {
+    const riga = s => esc(s).replace(/&lt;@(?:&amp;|!)?\d+&gt;/g, '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/__(.+?)__/g, '<u>$1</u>').replace(/~~(.+?)~~/g, '<s>$1</s>').replace(/(^|[^*\w])\*(?!\s)([^*]+?)\*(?!\*)/g, '$1<i>$2</i>');
+    const out = []; let lista = false, vuota = false;
+    for (let r of String(t || '').replace(/\r/g, '').split('\n')) {
+      let cit = false; if (/^\s*>\s?/.test(r)) { cit = true; r = r.replace(/^\s*>\s?/, ''); }
+      const li = r.match(/^\s*[*-]\s+(.*)$/), h = r.match(/^\s*(#{1,3})\s+(.*?)\s*#*\s*$/);
+      if (li) { if (!lista) { out.push('<ul>'); lista = true; } out.push(`<li${cit ? ' class="cit"' : ''}>${riga(li[1])}</li>`); vuota = false; continue; }
+      if (lista) { out.push('</ul>'); lista = false; }
+      if (!r.trim()) { if (!vuota && out.length) out.push('<p class="spazio"></p>'); vuota = true; continue; }
+      vuota = false;
+      if (h) { out.push(`<h${h[1].length + 3}>${riga(h[2])}</h${h[1].length + 3}>`); continue; }
+      out.push(`<p${cit ? ' class="cit"' : ''}>${riga(r)}</p>`);
+    }
+    if (lista) out.push('</ul>');
+    return out.join('');
+  }
+  function blocchiCom() {
+    const cmd = ACC.stato === 'comandante', visto = COM_VISTO();
+    const form = cmd ? `<details class="com-nuova" id="com-box"><summary>＋ Nuova comunicazione</summary>
+      <form id="com-form" class="com-form" novalidate>
+        <label class="campo largo"><span>Titolo <em>*</em></span><input name="titolo" maxlength="120" required placeholder="es. 📚 Calendario lezioni della settimana"></label>
+        <label class="campo largo"><span>Testo <em>*</em></span><textarea name="testo" rows="9" maxlength="6000" required placeholder="Puoi incollare il testo da Discord: **grassetto**, __sottolineato__, elenchi con * e citazioni con >. Le menzioni dei ruoli vengono tolte da sole."></textarea></label>
+        <label class="campo"><span>Firma</span><input name="firma" maxlength="120" value="${esc(LS.get('lspd-com-firma', ''))}" placeholder="es. Responsabile H.R. Team · Cpt. Victor Riggs"></label>
+        <label class="com-check"><input type="checkbox" name="fissata"> 📌 Metti in evidenza (resta in cima)</label>
+        <div class="com-az"><button class="btn ghost" type="button" data-com-annulla>Annulla</button><button class="btn p" type="submit">📢 Pubblica</button></div>
+      </form></details>` : '';
+    const lista = COM.map(c => { const nuova = new Date(c.creato) > new Date(visto || 0) && visto, lunga = (c.testo || '').length > 700; return `<article class="com${c.fissata ? ' fissa' : ''}${nuova ? ' nuova' : ''}" data-com="${esc(c.id)}">
+        <div class="com-testa"><span class="com-ico">${c.fissata ? '📌' : '📢'}</span><div><b>${esc(c.titolo)}</b><small>${quando(c.creato)}${c.autore ? ` · pubblicata da ${esc(c.autore)}` : ''}${c.modificato ? ` · modificata ${quando(c.modificato)}` : ''}</small></div>${nuova ? '<em class="com-new">Nuova</em>' : ''}</div>
+        <div class="com-corpo${lunga ? ' lunga' : ''}">${discordMd(c.testo)}</div>${lunga ? '<button class="com-tutto" type="button" data-com-tutto>Leggi tutto ↓</button>' : ''}
+        ${c.firma ? `<p class="com-firma">${esc(c.firma)}</p>` : ''}
+        ${cmd ? `<div class="com-gest"><button class="btn piccolo" type="button" data-com-mod="${esc(c.id)}">✏️ Modifica</button><button class="btn piccolo ghost" type="button" data-com-pin="${esc(c.id)}">${c.fissata ? 'Togli dall\'evidenza' : '📌 Metti in evidenza'}</button><button class="btn piccolo ghost" type="button" data-com-del="${esc(c.id)}">🗑 Elimina</button></div>` : ''}
+      </article>`; }).join('');
+    return form + (lista || '<p class="intro-s">Nessuna comunicazione per ora.</p>');
+  }
+  const ridisegnaCom = () => { const el = $('#acc-com'); if (el) { el.innerHTML = blocchiCom(); rivela(el); } };
+  function segnaComLette() {
+    const ultima = COM.reduce((m, c) => Math.max(m, +new Date(c.creato)), 0);
+    if (!COM_VISTO()) LS.set('lspd-com-visto', ultima || Date.now());
+    else setTimeout(() => { if (vista === 'accademia') LS.set('lspd-com-visto', Math.max(ultima, COM_VISTO())); }, 4000);
+    const nb = $('#nav-acc'); if (nb) nb.hidden = true;
+  }
+  let comContate = false;
+  async function contaComunicazioni() {
+    if (comContate || !DB_ATTIVO || !['membro', 'comandante'].includes(ACC.stato)) return; comContate = true;
+    try {
+      const sb = await db(); const { data } = await sb.from(T('comunicazioni')).select('creato').order('creato', { ascending: false }).limit(60);
+      const visto = COM_VISTO(), n = visto ? (data || []).filter(c => new Date(c.creato) > new Date(visto)).length : 0;
+      const nb = $('#nav-acc'); if (nb && n && vista !== 'accademia') { nb.hidden = false; nb.textContent = n; toast(n === 1 ? '📢 C\'è una nuova comunicazione in Accademia' : `📢 Ci sono ${n} nuove comunicazioni in Accademia`, 'ok'); }
+    } catch {}
+  }
+  document.addEventListener('click', async e => {
+    const tt = e.target.closest('[data-com-tutto]'); if (tt) { const c = tt.previousElementSibling; c.classList.toggle('aperta'); tt.textContent = c.classList.contains('aperta') ? 'Riduci ↑' : 'Leggi tutto ↓'; return; }
+    if (ACC.stato !== 'comandante') return;
+    if (e.target.closest('[data-com-annulla]')) { const f = $('#com-form'); f.reset(); delete f.dataset.id; $('#com-box').open = false; $('#com-box summary').textContent = '＋ Nuova comunicazione'; return; }
+    const m = e.target.closest('[data-com-mod]');
+    if (m) { const c = COM.find(x => String(x.id) === m.dataset.comMod); if (!c) return; const f = $('#com-form'); f.dataset.id = c.id; f.titolo.value = c.titolo; f.testo.value = c.testo; f.firma.value = c.firma || ''; f.fissata.checked = !!c.fissata; $('#com-box').open = true; $('#com-box summary').textContent = '✏️ Modifica comunicazione'; $('#com-box').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const p = e.target.closest('[data-com-pin]');
+    if (p) { const c = COM.find(x => String(x.id) === p.dataset.comPin); if (!c) return; const sb = await db(); const { error } = await sb.from(T('comunicazioni')).update({ fissata: !c.fissata }).eq('id', c.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaComunicazioni(); ridisegnaCom(); toast(c.fissata ? 'Tolta dall\'evidenza' : '📌 Messa in evidenza', 'ok'); return; }
+    const d = e.target.closest('[data-com-del]');
+    if (d) { const c = COM.find(x => String(x.id) === d.dataset.comDel); if (!c) return; if (!(await chiedi('Eliminare la comunicazione?', `«${c.titolo}» sparisce per tutti. Non si può annullare.`, 'Elimina', 'Annulla'))) return; const sb = await db(); const { error } = await sb.from(T('comunicazioni')).delete().eq('id', c.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaComunicazioni(); ridisegnaCom(); toast('Comunicazione eliminata', 'ok'); }
+  });
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'com-form') return; e.preventDefault();
+    const f = e.target, g = k => String(f[k].value || '').trim();
+    if (!g('titolo') || !g('testo')) { toast('Scrivi titolo e testo', 'ko'); return; }
+    const riga = { titolo: g('titolo'), testo: g('testo'), firma: g('firma') || null, fissata: f.fissata.checked };
+    LS.set('lspd-com-firma', g('firma'));
+    const sb = await db(); const q = f.dataset.id ? sb.from(T('comunicazioni')).update(riga).eq('id', f.dataset.id) : sb.from(T('comunicazioni')).insert(riga);
+    const { error } = await q; if (error) { toast('Pubblicazione non riuscita: ' + error.message, 'ko'); return; }
+    toast(f.dataset.id ? 'Comunicazione aggiornata ✓' : '📢 Comunicazione pubblicata: la vedono tutti i membri', 'ok');
+    await caricaComunicazioni(); ridisegnaCom(); if (!f.dataset.id) coriandoli();
+  });
   function renderAccademia() {
     const A = ACCAD, oggi = new Date().getDay();
     const sett = [1, 2, 3, 4, 5, 6, 0].map(g => { const ls = (A.lezioni || []).filter(l => l.g === g); return `<div class="acc-g${g === oggi ? ' oggi' : ''}${ls.length ? '' : ' vuoto'}"><b>${GIORNI[g]}</b>${ls.length ? ls.map(l => `<span class="acc-l ${esc(l.tipo.toLowerCase())}"><i>${esc(l.inizio)}–${esc(l.fine)}</i>${esc(l.tipo)}</span>`).join('') : '<em>Nessuna lezione</em>'}</div>`; }).join('');
@@ -1151,6 +1231,8 @@
         <div class="acc-prox" id="acc-prox"></div>
         <div class="acc-luogo"><small>Dove</small><b>${esc(A.luogo || '')}</b><span>${esc(A.anticipo || '')}</span></div>
       </div>
+      <div class="sez-testa rivela"><small>Dal Comando e dall'H.R.</small><h2>Comunicazioni</h2>${ACC.stato === 'comandante' ? '<span class="sez-dx">Le scrivete voi: le vedono solo i membri verificati</span>' : ''}</div>
+      <div id="acc-com" class="rivela">${blocchiCom()}</div>
       <div class="sez-testa rivela"><small>Calendario</small><h2>Lezioni della settimana</h2></div>
       <div class="acc-sett rivela">${sett}</div>
       <div class="sez-testa rivela"><small>Prima di presentarsi</small><h2>Requisiti obbligatori</h2></div>
@@ -1164,7 +1246,7 @@
       <div id="acc-libretto" class="rivela">${libretto()}</div>
       ${(A.note || []).map(n => `<div class="box vietato rivela" style="margin-top:14px"><b class="e">N.B.</b><p>${esc(n)}</p></div>`).join('')}
       ${A.firma ? `<p class="acc-firma rivela">${esc(A.firma[0])}<b>${esc(A.firma[1] || '')}</b></p>` : ''}`;
-    aggiornaProssima(); rivela();
+    aggiornaProssima(); rivela(); segnaComLette();
   }
 
   /* ═════════════ AREA COMANDO (accesso con Discord) ═════════════ */
@@ -1457,7 +1539,7 @@
     $$('.nav a[data-v]').forEach(a => a.classList.toggle('chiuso', !puoVedere(a.dataset.v)));
     $$('a.cat, a.cap-a.esa').forEach(c => c.classList.toggle('chiuso', !puoVedere(risolvi(c.getAttribute('href').slice(1)).v)));
     const nc = $('.nav-cmd'); if (nc) nc.hidden = !(ACC.stato === 'comandante' || ACC.stato === 'aperto');
-    renderChip(); mostraDefcon();
+    renderChip(); mostraDefcon(); if (ACC.utente) contaComunicazioni();
     if (DB_ATTIVO) LS.set('gu-acc', { stato: ACC.stato });
     if (vista === 'bandi' && $('#candidatura').hidden) renderBandi();
     if (vista && !puoVedere(vista)) vai();
