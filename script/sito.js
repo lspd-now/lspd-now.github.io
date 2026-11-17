@@ -456,7 +456,7 @@
   $('#prontuario').addEventListener('click', e => { const b = e.target.closest('.azzera'); if (!b) return; const c = b.closest('.pron'); $$('input', c).forEach(i => { i.checked = false; }); $('.pron-n', c).textContent = `0/${$$('input', c).length}`; c.classList.remove('completa'); });
 
   /* ── carriera ── */
-  const PASSI = { 'Recluta': ['Accademia H.R.', '4 rapporti di pattuglia, 2 lezioni teoriche, 1 pratica, almeno 5 giorni di servizio'], 'Agente I': ['Almeno 14 giorni', 'Valutazioni operative e disciplinari positive'], 'Agente II': ['Almeno 14 giorni', 'Valutazioni operative e disciplinari positive'], 'Agente III': ['Almeno 14 giorni', 'Valutazioni positive e capacità di coordinamento'], 'Agente Coordinatore': ['Almeno 2 settimane da Agente III', 'Eccellenza nel coordinare le squadre ed esame da Sergente'] };
+  const PASSI = { 'Recluta': ['Accademia H.R.', '2 lezioni teoriche e 1 pratica (3 bollini verdi), esame orale, 14 giorni di affiancamento con 5 rapporti (almeno 4 positivi), esame pratico su strada'], 'Agente I': ['Almeno 14 giorni', 'Valutazioni operative e disciplinari positive'], 'Agente II': ['Almeno 14 giorni', 'Valutazioni operative e disciplinari positive'], 'Agente III': ['Almeno 14 giorni', 'Valutazioni positive e capacità di coordinamento'], 'Agente Coordinatore': ['Almeno 2 settimane da Agente III', 'Eccellenza nel coordinare le squadre ed esame da Sergente'] };
   const percorso = FASCE.flatMap(([fascia, , g]) => g.map(x => [...x, fascia])).reverse();
   $('#carriera').innerHTML = percorso.map(([nome, sig, f, fascia], i) => {
     const pros = percorso[i + 1], req = PASSI[nome] || (pros ? ['A discrezione', 'Nomina dell\'Alto Comando'] : null);
@@ -568,8 +568,8 @@
     const inv = LS.get('gu-candidature', {})[b.id];
     const blocca = false;
     const statoEsame = b.esameRichiesto ? (ok
-      ? `<div class="esame-stato ok"><span class="es-i">✓</span><div><b>Esame d'accademia superato · ${att ? `${att.punti}/${att.tot} (${att.pct}%)` : e.best + '%'}</b><small>${att ? `Codice attestato ${att.codice} · verrà allegato alla candidatura` : 'Il risultato verrà allegato alla candidatura'}</small></div><a class="btn piccolo" href="#attestato">Vedi attestato</a></div>`
-      : `<div class="esame-stato ko"><span class="es-i">!</span><div><b>Prima devi superare l'esame d'accademia</b><small>Questo bando richiede almeno il ${Math.round(ESAMI.finale.soglia * 100)}% nell'esame finale. ${e ? `Il tuo miglior risultato finora: ${e.best}%.` : 'Non l\'hai ancora sostenuto.'}</small></div><a class="btn p piccolo" href="#esame-finale">Fai l'esame →</a></div>`) : '';
+      ? `<div class="esame-stato ok"><span class="es-i">✓</span><div><b>Test quiz superato · ${att ? `${att.punti}/${att.tot} (${att.pct}%)` : e.best + '%'}</b><small>${att ? `Codice attestato ${att.codice} · verrà allegato alla candidatura` : 'Il risultato verrà allegato alla candidatura'}</small></div><a class="btn piccolo" href="#attestato">Vedi attestato</a></div>`
+      : `<div class="esame-stato ko"><span class="es-i">!</span><div><b>Prima devi superare il test quiz finale</b><small>Questo bando richiede almeno il ${Math.round(ESAMI.finale.soglia * 100)}% nell'esame finale. ${e ? `Il tuo miglior risultato finora: ${e.best}%.` : 'Non l\'hai ancora sostenuto.'}</small></div><a class="btn p piccolo" href="#esame-finale">Fai l'esame →</a></div>`) : '';
     const campo = (id, lab, html, req, largo, aiuto) => `<label class="campo${largo ? ' largo' : ''}" data-campo="${id}"><span>${lab}${req ? ' <em>*</em>' : ''}</span>${html}${aiuto ? `<small>${aiuto}</small>` : ''}</label>`;
     box.innerHTML = `<div class="cand-testa"><div><small>${esc(b.numero)} · Candidatura online</small><h2>${esc(b.titolo)}</h2></div><a class="btn piccolo" href="#bando-${esc(b.id)}">← Torna al bando</a></div>
       ${inv ? `<div class="esame-stato ok"><span class="es-i">✓</span><div><b>Hai già inviato una candidatura per questo bando</b><small>Il ${dataIt(new Date(inv.data))} · protocollo ${esc(inv.protocollo)}. Inviala di nuovo solo se te lo chiede l'Alto Comando.</small></div></div>` : ''}
@@ -621,7 +621,7 @@
     LS.set('gu-candidato', { ...candidato(), nome: d.nome, matricola: d.matricola, discord: d.discord, discordId: d.discordId });
     const protocollo = 'PD-C-' + firma(d.nome + d.matricola + b.id + Date.now()).slice(0, 5);
     const esame = att ? `${att.punti}/${att.tot} (${att.pct}%) · codice ${att.codice}` : e ? `${e.best}% (miglior risultato)` : 'Non sostenuto';
-    const testo = [`📨 **CANDIDATURA · ${b.titolo.toUpperCase()}**`, `${b.numero} · Protocollo \`${protocollo}\``, '', `**Personaggio:** ${d.nome}`, `**Documento:** ${d.matricola || '—'}`, `**Lavoro attuale:** ${d.grado || '—'}`, `**Discord:** ${d.discord} (ID ${d.discordId})`, `**Età:** ${d.eta}`, `**Ore a settimana:** ${d.ore}`, `**Fasce orarie:** ${d.fasce}`, b.interno ? `**Ufficiale proponente:** ${d.ufficiale}` : null, `**Esame d'accademia:** ${esame}`, '', `**Esperienze:** ${d.esperienze || '—'}`, '', `**Motivazione:**\n${d.motivazione}`, '', `**Caso pratico:**\n${d.caso}`].filter(x => x !== null).join('\n');
+    const testo = [`📨 **CANDIDATURA · ${b.titolo.toUpperCase()}**`, `${b.numero} · Protocollo \`${protocollo}\``, '', `**Personaggio:** ${d.nome}`, `**Documento:** ${d.matricola || '—'}`, `**Lavoro attuale:** ${d.grado || '—'}`, `**Discord:** ${d.discord} (ID ${d.discordId})`, `**Età:** ${d.eta}`, `**Ore a settimana:** ${d.ore}`, `**Fasce orarie:** ${d.fasce}`, b.interno ? `**Ufficiale proponente:** ${d.ufficiale}` : null, `**Test quiz finale:** ${esame}`, '', `**Esperienze:** ${d.esperienze || '—'}`, '', `**Motivazione:**\n${d.motivazione}`, '', `**Caso pratico:**\n${d.caso}`].filter(x => x !== null).join('\n');
     const payload = {
       username: 'LSPD · Bandi', avatar_url: avatar(), ...menzione(CFG.menzioneCandidature),
       embeds: [{
@@ -672,7 +672,7 @@
     $('#cand-dati').addEventListener('submit', ev => { ev.preventDefault(); const f = new FormData(ev.target); LS.set('gu-candidato', { nome: String(f.get('nome')).trim(), matricola: String(f.get('matricola')).trim(), discord: String(f.get('discord')).trim() }); toast('Dati salvati', 'ok'); centroEsami(); });
 
     const fi = infoEsame('finale'), ef = E.finale;
-    $('#finale-card').innerHTML = `<div><small class="eyebrow">★ Esame finale</small><h2>${esc(fi.titolo)}</h2><p>${fi.n} domande pescate da tutti i capitoli, con casi pratici, vero o falso, risposte multiple e procedure da mettere in ordine. Serve per passare da Recluta ad Agente I (art. 2.4): chi lo supera ottiene l'attestato d'idoneità${CFG.webhookEsami || DB_ATTIVO ? ' e l\'esito arriva all\'Alto Comando' : ''}.</p>
+    $('#finale-card').innerHTML = `<div><small class="eyebrow">★ Quiz finale · tutto il manuale</small><h2>${esc(fi.titolo)}</h2><p>${fi.n} domande pescate da tutti i capitoli, con casi pratici, vero o falso, risposte multiple e procedure da mettere in ordine. È l'allenamento completo sul Manuale operativo, utile per prepararsi agli esami dell'Accademia: chi lo supera ottiene l'attestato${CFG.webhookEsami || DB_ATTIVO ? ' e il risultato arriva al Comando' : ''}.</p>
       <div class="meta"><span>📝 ${fi.n} domande</span><span>⏱ ${fi.minuti} minuti</span><span>🎯 soglia ${Math.round(fi.soglia * 100)}%</span><span>🔁 tentativi: ${ef?.tentativi || 0}</span></div></div>
       <div class="finale-dx"><div class="medaglia" style="--p:${ef?.best || 0};--c:${ef?.superato ? 'var(--verde)' : 'var(--oro)'}"><div><b>${ef ? ef.best + '%' : '—'}</b><small>${ef ? 'RECORD' : 'DA FARE'}</small></div></div>
       <a class="btn p" href="#esame-finale">${ef ? 'Rifai l\'esame' : 'Inizia l\'esame'} →</a>${ef?.attestato ? '<a class="btn piccolo ghost" href="#attestato">🎖 Vedi attestato</a>' : ''}</div>`;
@@ -693,7 +693,7 @@
   }
   function aggiornaCTAEsami() {
     const E = esiti();
-    const ce = $('#capi-esami'); if (ce) { const sup = ESAMI.capitoli.filter(c => E[c.id]?.superato).length; ce.textContent = E.finale?.superato ? `✓ Accademia superata · ${sup}/${ESAMI.capitoli.length} verifiche` : sup ? `${sup} di ${ESAMI.capitoli.length} verifiche superate` : `${ESAMI.capitoli.length} verifiche e l'esame d'accademia`; }
+    const ce = $('#capi-esami'); if (ce) { const sup = ESAMI.capitoli.filter(c => E[c.id]?.superato).length; ce.textContent = E.finale?.superato ? `✓ Test quiz superato · ${sup}/${ESAMI.capitoli.length} verifiche` : sup ? `${sup} di ${ESAMI.capitoli.length} verifiche superate` : `${ESAMI.capitoli.length} verifiche e il test quiz finale`; }
     aggiornaLetti();
     $$('.cap-esame').forEach(a => { const e = E[a.dataset.esame]; a.classList.toggle('fatto', !!e?.superato); $('.ce-v', a).textContent = e ? (e.superato ? `✓ Superata · ${e.best}%` : `Record ${e.best}% · Riprova →`) : 'Inizia →'; });
   }
@@ -904,7 +904,7 @@
   function mostraEsito(p, esatte, x) {
     const info = p.info, box = $('#esami-prova');
     const [tit, txt] = x.superato
-      ? (info.finale ? ['Esame d\'accademia superato', 'Hai il requisito d\'esame per passare da Recluta ad Agente I (art. 2.4). Conserva il codice dell\'attestato.'] : x.pct === 100 ? ['Perfetto', 'Nessun errore: conosci questo capitolo alla perfezione.'] : ['Verifica superata', 'Ripassa le domande sbagliate qui sotto prima del prossimo turno.'])
+      ? (info.finale ? ['Test quiz superato', 'Conosci bene il Manuale operativo: sei pronto per gli esami dell\'Accademia. Conserva il codice dell\'attestato.'] : x.pct === 100 ? ['Perfetto', 'Nessun errore: conosci questo capitolo alla perfezione.'] : ['Verifica superata', 'Ripassa le domande sbagliate qui sotto prima del prossimo turno.'])
       : ['Non superato', `Serviva almeno il ${Math.round(info.soglia * 100)}%. Rileggi gli articoli indicati nelle risposte sbagliate e riprova.`];
     const ref = id => { const el = document.getElementById(id); return el ? ($('.ref', el)?.textContent || 'regolamento') : 'regolamento'; };
     box.innerHTML = `<div class="prova">
@@ -932,7 +932,7 @@
       <div class="a2">Si certifica che</div>
       <div class="nome">${esc(a.nome || '—')}</div>
       <div class="mat">MATRICOLA ${esc(a.matricola || '—')}</div>
-      <p class="a3">ha superato l'<b>Esame d'accademia</b> della LSPD con <b>${a.punti}/${a.tot}</b> risposte corrette (${a.pct}%), dimostrando la conoscenza del Manuale operativo LSPD.</p>
+      <p class="a3">ha superato il <b>Test Quiz finale</b> della LSPD con <b>${a.punti}/${a.tot}</b> risposte corrette (${a.pct}%), dimostrando la conoscenza del Manuale operativo LSPD.</p>
       <div class="att-righe"><div>Data<b>${dataIt(new Date(a.data))}</b></div><div>Codice di verifica<b>${esc(a.codice)}</b></div><div>Per l'Alto Comando<b>Accademia LSPD</b></div></div>
       <div class="att-sigillo">LSPD<br>★</div></div>
       <div class="att-az"><button class="btn p" type="button" id="att-stampa">🖨 Stampa o salva in PDF</button><a class="btn ghost" href="#esami">Centro esami</a></div></div>`;
@@ -1216,7 +1216,7 @@
     const L = esitiFiltrati();
     return `<div class="cmd-filtri">
         <input type="search" data-cf="qE" value="${esc(C.qE)}" placeholder="Cerca nome, matricola, Discord o codice">
-        <select data-cf="fE"><option value="tutti">Tutti gli esami</option><option value="finale"${C.fE === 'finale' ? ' selected' : ''}>Esame d'accademia</option>${ESAMI.capitoli.map(c => `<option value="${c.id}"${C.fE === c.id ? ' selected' : ''}>Cap. ${c.n} · ${esc(c.titolo)}</option>`).join('')}</select>
+        <select data-cf="fE"><option value="tutti">Tutti gli esami</option><option value="finale"${C.fE === 'finale' ? ' selected' : ''}>Test Quiz finale</option>${ESAMI.capitoli.map(c => `<option value="${c.id}"${C.fE === c.id ? ' selected' : ''}>Cap. ${c.n} · ${esc(c.titolo)}</option>`).join('')}</select>
         <select data-cf="fR"><option value="tutti">Tutti gli esiti</option><option value="si"${C.fR === 'si' ? ' selected' : ''}>Superati</option><option value="no"${C.fR === 'no' ? ' selected' : ''}>Non superati</option></select>
         <button class="btn piccolo" type="button" data-cmd="csv">⬇ Esporta in Excel</button>
       </div>
@@ -1265,7 +1265,7 @@
       ${t('sottotitolo', 'Sottotitolo', v.sottotitolo)}${t('apertoA', 'Aperto a', v.apertoA)}
       ${t('chiusura', 'Chiusura delle candidature <em>*</em>', v.chiusura ? String(v.chiusura).slice(0, 16) : '', 'type="datetime-local"')}<p class="campo"><span>Apertura</span><small style="color:var(--tenue)">${b && b.attivo ? `Avviato il ${dataB(b.apertura)}` : 'Si apre quando premi «Avvia bando»'}</small></p>
       ${t('posti', 'Posti', v.posti, 'type="number" min="1" max="99"')}${t('ordine', 'Posizione in elenco', v.ordine ?? 0, 'type="number"')}
-      <div class="campo largo dichiara"><label><input type="checkbox" name="esameRichiesto" ${v.esameRichiesto ? 'checked' : ''}>Per candidarsi serve l'esame d'accademia superato</label><label><input type="checkbox" name="interno" ${v.interno ? 'checked' : ''}>Bando interno (solo per chi è già nella LSPD)</label></div>
+      <div class="campo largo dichiara"><label><input type="checkbox" name="esameRichiesto" ${v.esameRichiesto ? 'checked' : ''}>Per candidarsi serve il test quiz finale superato</label><label><input type="checkbox" name="interno" ${v.interno ? 'checked' : ''}>Bando interno (solo per chi è già nella LSPD)</label></div>
       ${a('descrizione', 'Descrizione', v.descrizione)}
       ${a('requisiti', 'Requisiti', (v.requisiti || []).join('\n'), 'Uno per riga.')}
       ${a('preferenziali', 'Titoli preferenziali', (v.preferenziali || []).join('\n'), 'Uno per riga (facoltativo).')}
@@ -1288,7 +1288,7 @@
     const csv = ['Data;Nome;Matricola;Discord;Esame;Punti;Totale;Percentuale;Esito;Tempo;Uscite dalla pagina;Tentativo;Codice', ...L.map(e => [quando(e.creato), e.nome, e.matricola, e.discord, nomeEsame(e.esame), e.punti, e.totale, e.percentuale, e.superato ? 'Superato' : 'Non superato', e.tempo != null ? mmss(+e.tempo) : '', e.uscite, e.tentativo, e.codice].map(q).join(';'))].join('\r\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); a.download = `esiti-esami-${dataIt(new Date()).replace(/\//g, '-')}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
   }
-  const testoCand = c => [`📨 **CANDIDATURA · ${(c.bando_titolo || '').toUpperCase()}**`, `Protocollo \`${c.protocollo || '—'}\` · Stato: **${c.stato || 'Nuova'}**`, '', `**Personaggio:** ${c.nome}`, `**Documento:** ${c.matricola || '—'}`, `**Lavoro attuale:** ${c.grado || '—'}`, `**Discord:** ${c.discord}${c.discord_id ? ` (<@${c.discord_id}>)` : ''}`, `**Età:** ${c.eta ?? '—'}`, `**Ore a settimana:** ${c.ore || '—'}`, `**Fasce orarie:** ${c.fasce || '—'}`, c.ufficiale ? `**Ufficiale proponente:** ${c.ufficiale}` : null, `**Esame d'accademia:** ${c.esame || '—'}`, '', `**Motivazione:**\n${c.motivazione || '—'}`, '', `**Caso pratico:**\n${c.caso || '—'}`].filter(x => x !== null).join('\n');
+  const testoCand = c => [`📨 **CANDIDATURA · ${(c.bando_titolo || '').toUpperCase()}**`, `Protocollo \`${c.protocollo || '—'}\` · Stato: **${c.stato || 'Nuova'}**`, '', `**Personaggio:** ${c.nome}`, `**Documento:** ${c.matricola || '—'}`, `**Lavoro attuale:** ${c.grado || '—'}`, `**Discord:** ${c.discord}${c.discord_id ? ` (<@${c.discord_id}>)` : ''}`, `**Età:** ${c.eta ?? '—'}`, `**Ore a settimana:** ${c.ore || '—'}`, `**Fasce orarie:** ${c.fasce || '—'}`, c.ufficiale ? `**Ufficiale proponente:** ${c.ufficiale}` : null, `**Test quiz finale:** ${c.esame || '—'}`, '', `**Motivazione:**\n${c.motivazione || '—'}`, '', `**Caso pratico:**\n${c.caso || '—'}`].filter(x => x !== null).join('\n');
   async function elimina(tab, id, cosa) {
     if (!(await chiedi(`Eliminare ${cosa}?`, 'L\'eliminazione è definitiva: non si può annullare.', 'Elimina', 'Annulla'))) return;
     const sb = await db(); const { error } = await sb.from(T(tab)).delete().eq('id', id);

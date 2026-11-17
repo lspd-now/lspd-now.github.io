@@ -1063,7 +1063,8 @@ html.porta-su,html.porta-su body{overflow:hidden}
 .tilt-stemma .emblema{width:72%;height:80%}
 .tilt-stemma .emblema img,.tilt-stemma .emblema svg{filter:drop-shadow(0 10px 24px rgba(0,0,0,.6))}
 .f-emblema{width:38px;height:42px;flex:none}
-.pt-logo .emblema{position:absolute;inset:14px 22px;animation:pt-batte 2.4s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(30,107,255,.8))}
+.pt-logo .emblema img{position:static;inset:auto;width:100%;height:100%;border-radius:50%;animation:none;box-shadow:none}
+.pt-logo .emblema{position:absolute;inset:14px;animation:pt-batte 2.4s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(30,107,255,.8))}
 .att-emblema{width:13%;aspect-ratio:150/170;margin-bottom:1.5%;position:relative}
 .defcon-chip{--dc:#3b82f6;flex:none;display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:10px;border:1px solid color-mix(in srgb,var(--dc) 50%,var(--linea));background:var(--pannello);font:700 12px var(--f-mono);letter-spacing:.06em;color:var(--dc);cursor:help}
 .defcon-chip i{width:9px;height:9px;border-radius:50%;background:var(--dc);box-shadow:0 0 10px var(--dc);animation:pulsa 1.6s infinite}
