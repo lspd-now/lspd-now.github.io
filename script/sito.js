@@ -252,8 +252,10 @@
   $('.nav').addEventListener('click', e => { if (e.target.closest('a')) apriMenu(false); });
 
   /* ═════════════ BANDI: utilità ═════════════ */
-  const statoBando = b => { const now = Date.now(), a = +new Date(b.apertura), c = +new Date(b.chiusura); if (now > c) return 'chiuso'; if (now < a) return 'arrivo'; return 'aperto'; };
-  const NOMI_STATO = { aperto: 'Aperto', arrivo: 'In arrivo', chiuso: 'Chiuso' };
+  // un bando si apre SOLO quando il Comando preme «Avvia bando»; si chiude da solo alla scadenza
+  const statoBando = b => { if (!b.attivo) return 'spento'; return Date.now() > +new Date(b.chiusura) ? 'chiuso' : 'aperto'; };
+  const NOMI_STATO = { aperto: 'Aperto', spento: 'In preparazione', chiuso: 'Chiuso' };
+  const visibiliBandi = () => [...BANDI];
   const dataB = s => { const d = new Date(s); return `${dataIt(d)} · ${oraIt(d)}`; };
   function quanto(ms) {
     if (ms <= 0) return '00:00:00';
@@ -490,18 +492,18 @@
   /* ═════════════ BANDI ═════════════ */
   function annuncio(b) {
     const st = statoBando(b), url = sitoURL(), link = url ? `${url}#bando-${b.id}` : '(link al sito)';
-    const testa = st === 'aperto' ? '📢 **BANDO APERTO**' : st === 'arrivo' ? '🗓️ **BANDO IN ARRIVO**' : '🔒 **BANDO CHIUSO**';
-    const r = [`${testa} · **${b.titolo.toUpperCase()}**`, `${b.numero} · Posti: **${b.posti}** · Aperto a: ${b.apertoA}`, `Candidature dal **${dataB(b.apertura)}** al **${dataB(b.chiusura)}**`, '', b.descrizione, '', '**Requisiti**', ...b.requisiti.map(x => `• ${x}`), '', '**Come candidarsi**', `1. Leggi il bando completo: ${link}`];
+    const testa = st === 'aperto' ? '📢 **BANDO APERTO**' : st === 'spento' ? '🗓️ **BANDO IN PREPARAZIONE**' : '🔒 **BANDO CHIUSO**';
+    const r = [`${testa} · **${b.titolo.toUpperCase()}**`, `${b.numero} · Posti: **${b.posti}** · Aperto a: ${b.apertoA}`, (b.attivo && b.apertura ? `Candidature dal **${dataB(b.apertura)}** al **${dataB(b.chiusura)}**` : `Candidature fino al **${dataB(b.chiusura)}**, dall'avvio del bando`), '', b.descrizione, '', '**Requisiti**', ...b.requisiti.map(x => `• ${x}`), '', '**Come candidarsi**', `1. Leggi il bando completo: ${link}`];
     r.push('2. Invia la candidatura dal sito: arriva direttamente all\'Alto Comando');
     r.push('', '_Le candidature scritte qui su Discord non vengono prese in considerazione._');
     return r.join('\n');
   }
   function renderBandi(aperto) {
-    const ord = { aperto: 0, arrivo: 1, chiuso: 2 };
-    const lista = [...BANDI].sort((a, b) => ord[statoBando(a)] - ord[statoBando(b)]);
+    const ord = { aperto: 0, spento: 1, chiuso: 2 };
+    const lista = visibiliBandi().sort((a, b) => ord[statoBando(a)] - ord[statoBando(b)]);
     const inviate = LS.get('gu-candidature', {});
     $('#bandi-lista').innerHTML = lista.length ? lista.map(b => {
-      const st = statoBando(b), cd = st === 'aperto' ? +new Date(b.chiusura) : st === 'arrivo' ? +new Date(b.apertura) : 0;
+      const st = statoBando(b), cd = st === 'aperto' ? +new Date(b.chiusura) : 0;
       const inv = inviate[b.id];
       return `<article class="bando-card${b.foto ? ' con-foto' : ''}" id="bando-${esc(b.id)}" data-stato="${st}">${b.foto ? `<div class="bc-foto" style="background-image:url('${esc(b.foto)}')"></div>` : ''}
         <div class="bc-testa"><span class="stato-pill"><i></i>${NOMI_STATO[st]}</span><span class="bc-num">${esc(b.numero)}</span>${b.interno ? '<span class="chip">Interno</span>' : ''}${inv ? `<span class="chip" style="color:var(--verde)">✓ Candidatura inviata</span>` : ''}</div>
@@ -509,9 +511,9 @@
         <div class="bc-dati">
           <div><small>Posti</small><b>${b.posti}</b></div>
           <div><small>Aperto a</small><b style="font-size:16px">${esc(b.apertoA)}</b></div>
-          <div><small>Apertura</small><b>${dataB(b.apertura)}</b></div>
+          <div><small>Apertura</small><b>${b.attivo && b.apertura ? dataB(b.apertura) : 'Al via dal Comando'}</b></div>
           <div><small>Chiusura</small><b>${dataB(b.chiusura)}</b></div>
-          <div class="cd"><small>${st === 'aperto' ? 'Chiude tra' : st === 'arrivo' ? 'Apre tra' : 'Esito'}</small><b ${cd ? `data-cd="${cd}"` : ''}>${cd ? quanto(cd - Date.now()) : (b.esito ? 'Concluso' : 'Chiuso')}</b></div>
+          <div class="cd"><small>${st === 'aperto' ? 'Chiude tra' : st === 'spento' ? 'Stato' : 'Esito'}</small><b ${cd ? `data-cd="${cd}"` : ''}>${cd ? quanto(cd - Date.now()) : st === 'spento' ? 'In attesa di avvio' : (b.esito ? 'Concluso' : 'Chiuso')}</b></div>
         </div>
         ${b.esito ? `<p class="bc-nota" style="border-color:var(--verde);background:rgba(47,211,138,.06)">${esc(b.esito)}</p>` : ''}
         <details class="bc-dettagli" ${aperto === b.id ? 'open' : ''}><summary>Leggi il bando completo</summary>
@@ -521,8 +523,9 @@
           </div>
         </details>
         <div class="bc-azioni">
-          ${st === 'aperto' ? `<a class="btn p" href="#candidatura-${esc(b.id)}">${inv ? 'Rivedi la candidatura' : 'Candidati ora'} →</a>` : st === 'arrivo' ? `<button class="btn" type="button" disabled>Candidature dal ${dataIt(new Date(b.apertura))}</button>` : ''}
-          ${ACC.stato === 'comandante' ? `<button class="btn ghost" type="button" data-annuncio="${esc(b.id)}">📋 Copia annuncio per Discord</button>
+          ${st === 'aperto' ? `<a class="btn p" href="#candidatura-${esc(b.id)}">${inv ? 'Rivedi la candidatura' : 'Candidati ora'} →</a>` : ''}
+          ${ACC.stato === 'comandante' ? `${st === 'spento' ? `<button class="btn p" type="button" data-battiva="${esc(b.id)}" data-on="1">▶ Avvia bando</button>` : st === 'aperto' ? `<button class="btn rosso" type="button" data-battiva="${esc(b.id)}" data-on="0">⏹ Disattiva bando</button>` : ''}
+          <button class="btn ghost" type="button" data-annuncio="${esc(b.id)}">📋 Copia annuncio per Discord</button>
           <button class="btn ghost" type="button" data-link="${esc(b.id)}">🔗 Copia link</button>` : ''}
         </div>
       </article>`;
@@ -558,7 +561,7 @@
     const box = $('#candidatura'), b = BANDI.find(x => x.id === id);
     if (!b) { box.hidden = true; toast('Bando non trovato', 'ko'); return; }
     const st = statoBando(b); box.hidden = false;
-    if (st !== 'aperto') { box.innerHTML = `<div class="cand-testa"><div><small>${esc(b.numero)}</small><h2>Candidature ${st === 'arrivo' ? 'non ancora aperte' : 'chiuse'}</h2></div><a class="btn piccolo" href="#bandi">← Torna ai bandi</a></div><p style="color:var(--tenue)">${st === 'arrivo' ? `Il bando apre il ${dataB(b.apertura)}.` : `Il bando si è chiuso il ${dataB(b.chiusura)}.`}</p>`; return; }
+    if (st !== 'aperto') { box.innerHTML = `<div class="cand-testa"><div><small>${esc(b.numero)}</small><h2>Candidature ${st === 'spento' ? 'non attive' : 'chiuse'}</h2></div><a class="btn piccolo" href="#bandi">← Torna ai bandi</a></div><p style="color:var(--tenue)">${st === 'spento' ? 'Questo bando non è stato avviato dal Comando.' : `Il bando si è chiuso il ${dataB(b.chiusura)}.`}</p>`; return; }
     const c = candidato(), e = esiti().finale, ok = !!(e && e.superato), att = e?.attestato;
     const inv = LS.get('gu-candidature', {})[b.id];
     const blocca = false;
@@ -1023,6 +1026,22 @@
     nastro(); aggiornaBandiHome(); if (vista === 'bandi' && $('#candidatura').hidden) renderBandi();
   }
 
+  async function cambiaAttivo(id, on) {
+    const b = BANDI.find(x => x.id === id); if (!b || ACC.stato !== 'comandante') return;
+    if (on && !(+new Date(b.chiusura) > Date.now())) { toast('La data di chiusura è già passata: premi «Modifica» e mettine una nuova', 'ko'); return; }
+    if (!(await chiedi(on ? `Avviare «${b.titolo}»?` : `Disattivare «${b.titolo}»?`, on ? `Il bando si apre subito: tutti lo vedono e possono candidarsi fino al ${dataB(b.chiusura)}.` : 'Il bando resta visibile come «In preparazione», ma non si accettano più candidature finché non lo riavvii.', on ? 'Avvia ora' : 'Disattiva', 'Annulla'))) return;
+    const sb = await db(); if (!sb) return;
+    const { id: _id, ordine: _o, ...dati } = b;
+    dati.attivo = on; if (on) dati.apertura = new Date().toISOString();
+    const { error } = await sb.from(T('bandi')).update({ dati, aggiornato: new Date().toISOString() }).eq('id', id);
+    if (error) { toast('Non riesco a cambiare il bando: ' + error.message, 'ko'); return; }
+    toast(on ? 'Bando avviato ✓ Ora è aperto a tutti' : 'Bando disattivato ✓ Ora è «In preparazione»', on ? 'ok' : 'ok');
+    if (on) coriandoli?.();
+    await caricaBandiDB();
+    if (vista === 'comando' && C.utente) { await caricaCmd(sb); renderCmd(); }
+  }
+  document.addEventListener('click', e => { const x = e.target.closest('[data-battiva]'); if (x) { e.preventDefault(); e.stopPropagation(); cambiaAttivo(x.dataset.battiva, x.dataset.on === '1'); } }, true);
+
   /* ═════════════ AREA COMANDO (accesso con Discord) ═════════════ */
   const STATI_C = ['Nuova', 'In valutazione', 'Colloquio fissato', 'Accettata', 'Respinta'];
   const COL_STATO = { 'Nuova': 'var(--blu-chiaro)', 'In valutazione': 'var(--giallo)', 'Colloquio fissato': '#a78bfa', 'Accettata': 'var(--verde)', 'Respinta': 'var(--rosso)' };
@@ -1145,8 +1164,8 @@
   }
   function schedaBandi() {
     if (C.bando) return editorBando(C.bando === 'nuovo' ? null : BANDI.find(b => b.id === C.bando));
-    return `<div class="cmd-filtri"><button class="btn p" type="button" data-cmd="nuovo-bando">+ Nuovo bando</button><span class="intro-s" style="margin:0">Quello che salvi qui compare subito sul sito, senza toccare i file.</span></div>
-      <div class="cmd-bandi">${BANDI.map(b => { const st = statoBando(b); return `<div class="cmd-b"><span class="stato-pill" style="--c:${st === 'aperto' ? 'var(--verde)' : st === 'arrivo' ? 'var(--giallo)' : '#5d6886'}"><i></i>${NOMI_STATO[st]}</span><div class="cmd-b-t"><b>${esc(b.titolo)}</b><small>${esc(b.numero)} · ${dataB(b.apertura)} → ${dataB(b.chiusura)} · ${esc(b.posti)} posti</small></div><div class="cmd-b-az"><button class="btn piccolo" type="button" data-bmod="${esc(b.id)}">Modifica</button><button class="btn piccolo ghost" type="button" data-annuncio="${esc(b.id)}">📋 Annuncio</button><button class="btn piccolo ghost" type="button" data-del-bando="${esc(b.id)}">🗑</button></div></div>`; }).join('') || '<p class="intro-s">Nessun bando. Creane uno nuovo.</p>'}</div>`;
+    return `<div class="cmd-filtri"><button class="btn p" type="button" data-cmd="nuovo-bando">+ Nuovo bando</button><span class="intro-s" style="margin:0">Un bando nuovo resta «In preparazione» finché non premi «Avvia»: solo il Comando può aprirlo o disattivarlo.</span></div>
+      <div class="cmd-bandi">${BANDI.map(b => { const st = statoBando(b); return `<div class="cmd-b"><span class="stato-pill" style="--c:${st === 'aperto' ? 'var(--verde)' : st === 'spento' ? 'var(--giallo)' : '#5d6886'}"><i></i>${NOMI_STATO[st]}</span><div class="cmd-b-t"><b>${esc(b.titolo)}</b><small>${esc(b.numero)} · ${b.attivo && b.apertura ? dataB(b.apertura) : 'da avviare'} → ${dataB(b.chiusura)} · ${esc(b.posti)} posti</small></div><div class="cmd-b-az">${st === 'spento' ? `<button class="btn piccolo p" type="button" data-battiva="${esc(b.id)}" data-on="1">▶ Avvia</button>` : st === 'aperto' ? `<button class="btn piccolo rosso" type="button" data-battiva="${esc(b.id)}" data-on="0">⏹ Disattiva</button>` : ''}<button class="btn piccolo" type="button" data-bmod="${esc(b.id)}">Modifica</button><button class="btn piccolo ghost" type="button" data-annuncio="${esc(b.id)}">📋 Annuncio</button><button class="btn piccolo ghost" type="button" data-del-bando="${esc(b.id)}">🗑</button></div></div>`; }).join('') || '<p class="intro-s">Nessun bando. Creane uno nuovo.</p>'}</div>`;
   }
   function editorBando(b) {
     const v = b || { numero: '', titolo: '', sottotitolo: '', apertoA: 'Agenti LSPD in servizio', apertura: '', chiusura: '', posti: 1, esameRichiesto: true, interno: false, descrizione: '', requisiti: [], preferenziali: [], fasi: [], note: '', esito: '', ordine: BANDI.length };
@@ -1155,7 +1174,7 @@
     return `<form class="riquadro cmd-editor" id="cmd-bando" novalidate><h3 class="r-tit">${b ? 'Modifica bando' : 'Nuovo bando'}</h3><div class="form-griglia">
       ${t('titolo', 'Titolo <em>*</em>', v.titolo, 'maxlength="90" placeholder="es. Reclutamento Reclute LSPD"')}${t('numero', 'Numero del bando', v.numero, 'placeholder="es. Bando n. 02/2026"')}
       ${t('sottotitolo', 'Sottotitolo', v.sottotitolo)}${t('apertoA', 'Aperto a', v.apertoA)}
-      ${t('apertura', 'Apertura <em>*</em>', v.apertura, 'type="datetime-local"')}${t('chiusura', 'Chiusura <em>*</em>', v.chiusura, 'type="datetime-local"')}
+      ${t('chiusura', 'Chiusura delle candidature <em>*</em>', v.chiusura ? String(v.chiusura).slice(0, 16) : '', 'type="datetime-local"')}<p class="campo"><span>Apertura</span><small style="color:var(--tenue)">${b && b.attivo ? `Avviato il ${dataB(b.apertura)}` : 'Si apre quando premi «Avvia bando»'}</small></p>
       ${t('posti', 'Posti', v.posti, 'type="number" min="1" max="99"')}${t('ordine', 'Posizione in elenco', v.ordine ?? 0, 'type="number"')}
       <div class="campo largo dichiara"><label><input type="checkbox" name="esameRichiesto" ${v.esameRichiesto ? 'checked' : ''}>Per candidarsi serve l'esame d'accademia superato</label><label><input type="checkbox" name="interno" ${v.interno ? 'checked' : ''}>Bando interno (solo per chi è già nella LSPD)</label></div>
       ${a('descrizione', 'Descrizione', v.descrizione)}
@@ -1167,14 +1186,13 @@
   }
   async function salvaBando(form) {
     const f = new FormData(form), g = k => String(f.get(k) || '').trim(), righe = k => g(k).split('\n').map(x => x.trim()).filter(Boolean);
-    if (!g('titolo') || !g('apertura') || !g('chiusura')) { toast('Titolo, apertura e chiusura sono obbligatori', 'ko'); return; }
-    if (new Date(g('chiusura')) <= new Date(g('apertura'))) { toast('La chiusura deve venire dopo l\'apertura', 'ko'); return; }
+    if (!g('titolo') || !g('chiusura')) { toast('Titolo e chiusura sono obbligatori', 'ko'); return; }
     const vecchio = C.bando !== 'nuovo' ? BANDI.find(b => b.id === C.bando) : null;
     const id = vecchio?.id || (g('titolo').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '-' + Date.now().toString(36).slice(-4));
-    const dati = { numero: g('numero'), titolo: g('titolo'), sottotitolo: g('sottotitolo'), apertoA: g('apertoA'), apertura: g('apertura'), chiusura: g('chiusura'), posti: +g('posti') || 1, esameRichiesto: !!f.get('esameRichiesto'), interno: !!f.get('interno'), descrizione: g('descrizione'), requisiti: righe('requisiti'), preferenziali: righe('preferenziali'), fasi: righe('fasi').map(r => { const [x, ...d] = r.split('|'); return [x.trim(), d.join('|').trim()]; }), note: g('note'), esito: g('esito'), foto: g('foto') };
+    const dati = { numero: g('numero'), titolo: g('titolo'), sottotitolo: g('sottotitolo'), apertoA: g('apertoA'), apertura: vecchio?.apertura || '', attivo: !!vecchio?.attivo, chiusura: g('chiusura'), posti: +g('posti') || 1, esameRichiesto: !!f.get('esameRichiesto'), interno: !!f.get('interno'), descrizione: g('descrizione'), requisiti: righe('requisiti'), preferenziali: righe('preferenziali'), fasi: righe('fasi').map(r => { const [x, ...d] = r.split('|'); return [x.trim(), d.join('|').trim()]; }), note: g('note'), esito: g('esito'), foto: g('foto') };
     const sb = await db(); const { error } = await sb.from(T('bandi')).upsert({ id, dati, ordine: +g('ordine') || 0, aggiornato: new Date().toISOString() });
     if (error) { toast('Salvataggio non riuscito: ' + error.message, 'ko'); return; }
-    toast('Bando salvato ✓ È già visibile sul sito', 'ok'); C.bando = null; await caricaCmd(sb); nastro(); aggiornaBandiHome(); renderCmd();
+    toast(vecchio?.attivo ? 'Bando salvato ✓ Le modifiche sono già sul sito' : 'Bando salvato ✓ Premi «Avvia» quando vuoi aprirlo', 'ok'); C.bando = null; await caricaCmd(sb); nastro(); aggiornaBandiHome(); renderCmd();
   }
   function esportaCSV() {
     const L = esitiFiltrati(), q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;

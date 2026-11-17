@@ -431,7 +431,8 @@ mark{background:rgba(255,201,74,.3);color:#fff;border-radius:3px;padding:0 2px;b
 .bando-card{--c:var(--verde);position:relative;background:linear-gradient(180deg,var(--pannello),var(--pannello2));border:1px solid var(--linea);border-radius:22px;padding:26px;overflow:hidden;transition:border-color .3s,box-shadow .3s}
 .bando-card:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--c);box-shadow:0 0 18px var(--c)}
 .bando-card:after{content:"";position:absolute;right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 16%,transparent),transparent);pointer-events:none}
-.bando-card[data-stato="arrivo"]{--c:var(--giallo)}
+.bando-card[data-stato="spento"]{--c:var(--giallo);border-style:dashed}
+.bando-card[data-stato="spento"] .bc-foto{filter:grayscale(.7) brightness(.8)}
 .bando-card[data-stato="chiuso"]{--c:#5d6886}
 .bando-card[data-stato="chiuso"] h3{color:var(--tenue)}
 .bando-card:target,.bando-card.evidenzia{border-color:var(--c);box-shadow:0 0 0 1px var(--c),0 24px 60px -30px var(--c)}
