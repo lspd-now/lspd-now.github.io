@@ -1173,7 +1173,7 @@
       <form id="com-form" class="com-form" novalidate>
         <label class="campo largo"><span>Titolo <em>*</em></span><input name="titolo" maxlength="120" required placeholder="es. 📚 Calendario lezioni della settimana"></label>
         <label class="campo largo"><span>Testo <em>*</em></span><textarea name="testo" rows="9" maxlength="6000" required placeholder="Puoi incollare il testo da Discord: **grassetto**, __sottolineato__, elenchi con * e citazioni con >. Le menzioni dei ruoli vengono tolte da sole."></textarea></label>
-        <label class="campo"><span>Firma</span><input name="firma" maxlength="120" value="${esc(LS.get('lspd-com-firma', ''))}" placeholder="es. Responsabile H.R. Team · Cpt. Victor Riggs"></label>
+        <label class="campo"><span>Firma</span><input name="firma" maxlength="120" value="${esc(LS.get('lspd-com-firma', ''))}" placeholder="es. Responsabile H.R. Team · Cpt. Rossi"></label>
         <label class="com-check"><input type="checkbox" name="fissata"> 📌 Metti in evidenza (resta in cima)</label>
         <div class="com-az"><button class="btn ghost" type="button" data-com-annulla>Annulla</button><button class="btn p" type="submit">📢 Pubblica</button></div>
       </form></details>` : '';
