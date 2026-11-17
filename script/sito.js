@@ -675,7 +675,7 @@
     $('#finale-card').innerHTML = `<div><small class="eyebrow">★ Quiz finale · tutto il manuale</small><h2>${esc(fi.titolo)}</h2><p>${fi.n} domande pescate da tutti i capitoli, con casi pratici, vero o falso, risposte multiple e procedure da mettere in ordine. È l'allenamento completo sul Manuale operativo, utile per prepararsi agli esami dell'Accademia: chi lo supera ottiene l'attestato${CFG.webhookEsami || DB_ATTIVO ? ' e il risultato arriva al Comando' : ''}.</p>
       <div class="meta"><span>📝 ${fi.n} domande</span><span>⏱ ${fi.minuti} minuti</span><span>🎯 soglia ${Math.round(fi.soglia * 100)}%</span><span>🔁 tentativi: ${ef?.tentativi || 0}</span></div></div>
       <div class="finale-dx"><div class="medaglia" style="--p:${ef?.best || 0};--c:${ef?.superato ? 'var(--verde)' : 'var(--oro)'}"><div><b>${ef ? ef.best + '%' : '—'}</b><small>${ef ? 'RECORD' : 'DA FARE'}</small></div></div>
-      <a class="btn p" href="#esame-finale">${ef ? 'Rifai l\'esame' : 'Inizia l\'esame'} →</a>${ef?.attestato ? '<a class="btn piccolo ghost" href="#attestato">🎖 Vedi attestato</a>' : ''}</div>`;
+      <a class="btn p" href="#esame-finale">${ef ? 'Rifai il quiz' : 'Inizia il quiz'} →</a>${ef?.attestato ? '<a class="btn piccolo ghost" href="#attestato">🎖 Vedi attestato</a>' : ''}</div>`;
     let sup = 0;
     $('#esami-griglia').innerHTML = ESAMI.capitoli.map(cap => {
       const i = infoEsame(cap.id), e = E[cap.id]; if (e?.superato) sup++;
