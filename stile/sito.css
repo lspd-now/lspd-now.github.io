@@ -1214,6 +1214,32 @@ body[data-defcon="2"]:after,body[data-defcon="1"]:after{box-shadow:inset 0 0 200
 @media (max-width:1100px){.acc-sett{grid-template-columns:repeat(4,1fr)}.acc-req{grid-template-columns:1fr 1fr}.acc-percorso,.acc-lib{grid-template-columns:1fr 1fr}}
 @media (max-width:700px){.acc-top,.acc-bollini,.acc-percorso,.acc-lib{grid-template-columns:1fr}.acc-sett{grid-template-columns:1fr 1fr}.acc-req{grid-template-columns:1fr}.acc-g{min-height:0}}
 
+/* ════════ LIBRETTI ════════ */
+.acc-lib-salva{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--linea)}
+.lib-stato{display:grid;gap:4px;font-size:14px;color:var(--tenue)}
+.lib-stato em{font-style:normal}
+.lib-sporco{color:var(--giallo)}.lib-ok{color:var(--verde)}
+.lib-nota{color:var(--testo);background:rgba(141,184,255,.08);padding:6px 10px;border-radius:10px}
+.lib-riass{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lib-riass>div{display:grid;gap:4px;padding:10px;border-radius:12px;background:var(--notte);border:1px solid var(--linea)}
+.lib-riass small{font:700 10.5px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tenue)}
+.lib-riass span{display:flex;gap:4px;flex-wrap:wrap}
+.lib-riass b{font:800 18px var(--f-titolo)}
+.lb{width:14px;height:14px;border-radius:50%;border:2px dashed var(--tenue)}
+.lb.v{background:var(--verde);border:0}.lb.g{background:var(--giallo);border:0}.lb.r{background:var(--rosso);border:0}
+.lr{display:grid;place-items:center;width:18px;height:18px;border-radius:5px;border:1px solid var(--linea2);font:800 11px var(--f-testo);font-style:normal}
+.lr.pos{background:rgba(47,211,138,.2);color:var(--verde);border-color:var(--verde)}.lr.neg{background:rgba(255,59,59,.18);color:var(--rosso);border-color:var(--rosso)}
+.lib-sosp{padding:10px 12px;border-radius:12px;background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.45);color:#ffb3b3;font-size:13.5px}
+.lib-sosp b{color:var(--rosso)}
+.lib-sosp ul{margin:4px 0 0;padding-left:18px}
+.lib-det summary{cursor:pointer;font-weight:700;color:var(--blu-chiaro);font-size:14px}
+.lib-storia{list-style:none;margin:8px 0 0;padding:0 0 0 14px;border-left:2px solid var(--linea2);display:grid;gap:8px;max-height:260px;overflow:auto}
+.lib-storia li{display:grid;gap:2px;font-size:13px;color:var(--tenue)}
+.lib-storia time{font:700 11.5px var(--f-mono);color:var(--blu-chiaro)}
+.lib-storia b{color:var(--testo)}
+.lib-storia span{color:var(--testo)}
+.lib-ctrl{color:var(--tenue);font-size:12.5px}
+
 /* ════════ FOTO LSPD ════════ */
 .hero-foto{position:absolute;inset:0;z-index:0}
 .hero-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity 1.8s ease,transform 8s ease}

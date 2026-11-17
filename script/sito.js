@@ -1054,6 +1054,7 @@
       try { const sb = await db(); const { data } = await sb.from(T('riservati')).select('dati').eq('id', 'accademia').maybeSingle(); ACCAD = data?.dati || null; } catch {}
       if (!ACCAD) { box.innerHTML = `<div class="cmd-porta blocco"><div class="cmd-lucchetto">${LUCCHETTO}</div><small>Accademia riservata</small><h2>Contenuto non disponibile</h2><p>Calendario e percorso dell'accademia si caricano solo per i membri verificati della LSPD. Accedi con Discord e riprova.</p></div>`; return; }
     }
+    await caricaMioLibretto();
     renderAccademia();
     clearInterval(accTimer); accTimer = setInterval(() => { if (vista === 'accademia' && !document.hidden) aggiornaProssima(); }, 1000);
   }
@@ -1082,30 +1083,65 @@
       ${!inCorso && p.ini - now < 36e5 ? '<p class="acc-avviso">Mettiti in divisa e raggiungi il desk: si entra con 5–10 minuti di anticipo.</p>' : dopo ? `<p class="acc-dopo">Poi: ${esc(GIORNI[dopo.g])} ${esc(dopo.inizio)} · ${esc(dopo.tipo)}</p>` : ''}`;
   }
   const LIB_VUOTO = { lezioni: ['', '', ''], rapporti: ['', '', '', '', ''], assunto: '' };
-  function libretto() {
-    const L = { ...LIB_VUOTO, ...LS.get('lspd-libretto', {}) };
+  const LIB = { dati: null, salvato: null, controllo: null, nota: '', da: '', sporco: false, caricato: false };
+  const NOMI_LEZ = ['Teorico 1', 'Teorico 2', 'Pratico'];
+  const CTRL = { da_controllare: ['Da controllare', 'var(--giallo)'], corretto: ['Corretto ✓', 'var(--verde)'], non_corrisponde: ['Non corrisponde ✗', 'var(--rosso)'] };
+  const libDati = () => ({ ...LIB_VUOTO, ...(LIB.dati || LS.get('lspd-libretto', null) || {}) });
+  function statLib(L) {
+    L = { ...LIB_VUOTO, ...(L || {}) };
     const verdi = L.lezioni.filter(x => x === 'verde').length, pos = L.rapporti.filter(x => x === 'pos').length, fatti = L.rapporti.filter(Boolean).length;
     const giorni = L.assunto ? Math.max(0, Math.floor((Date.now() - new Date(L.assunto)) / 864e5)) : null;
     const ok = [verdi >= 3, giorni != null && giorni >= 14, fatti >= 5 && pos >= 4];
-    const nomiL = ['Teorico 1', 'Teorico 2', 'Pratico'];
+    return { L, verdi, pos, fatti, giorni, ok, pronto: ok.every(Boolean), manca: [!ok[0] && 'bollini verdi', !ok[1] && '14 giorni di affiancamento', !ok[2] && '5 rapporti (almeno 4 positivi)'].filter(Boolean) };
+  }
+  async function caricaMioLibretto() {
+    if (LIB.caricato) return; LIB.caricato = true;
+    try {
+      const sb = await db(); const uid = (await sb.auth.getSession()).data.session?.user?.id; if (!uid) throw 0;
+      const { data } = await sb.from(T('libretti')).select('*').eq('user_id', uid).maybeSingle();
+      if (data) Object.assign(LIB, { dati: data.dati, salvato: data.salvato, controllo: data.controllo, nota: data.nota_comando || '', da: data.controllato_da || '' });
+    } catch {}
+    const bozza = LS.get('lspd-libretto-bozza', null);
+    if (bozza) { LIB.dati = bozza; LIB.sporco = true; }
+  }
+  function libretto() {
+    const { L, verdi, pos, fatti, giorni, pronto, manca } = statLib(libDati());
+    const [ct, cc] = CTRL[LIB.controllo] || [];
+    const stato = LIB.sporco ? '<b class="lib-sporco">● Modifiche non salvate</b>' : LIB.salvato ? `<b class="lib-ok">✓ Salvato ${esc(quandoBreve(LIB.salvato))}</b>` : '<b class="lib-sporco">Non ancora inviato al Comando</b>';
     return `<div class="acc-lib">
-      <div class="acc-lib-c"><h4>Lezioni <small>${verdi}/3 verdi</small></h4><div class="acc-slot">${L.lezioni.map((x, i) => `<button type="button" class="bol ${x}" data-lib="l${i}" title="Tocca per cambiare">${nomiL[i]}<i></i></button>`).join('')}</div></div>
-      <div class="acc-lib-c"><h4>Affiancamento <small>${giorni == null ? 'da iniziare' : `${giorni} giorni su 14`}</small></h4><label class="acc-data">Assunto il <input type="date" data-lib="assunto" value="${esc(L.assunto)}"></label><div class="acc-barra"><span style="width:${Math.min(100, (giorni || 0) / 14 * 100)}%"></span></div></div>
+      <div class="acc-lib-c"><h4>Lezioni <small>${verdi}/3 verdi</small></h4><div class="acc-slot">${L.lezioni.map((x, i) => `<button type="button" class="bol ${x}" data-lib="l${i}" title="Tocca per cambiare">${NOMI_LEZ[i]}<i></i></button>`).join('')}</div></div>
+      <div class="acc-lib-c"><h4>Affiancamento <small>${giorni == null ? 'da iniziare' : `${giorni} giorni su 14`}</small></h4><label class="acc-data">Assunto il <input type="date" data-lib="assunto" value="${esc(L.assunto)}" max="${new Date().toISOString().slice(0, 10)}"></label><div class="acc-barra"><span style="width:${Math.min(100, (giorni || 0) / 14 * 100)}%"></span></div></div>
       <div class="acc-lib-c"><h4>Rapporti <small>${pos} positivi su ${fatti}/5</small></h4><div class="acc-slot r">${L.rapporti.map((x, i) => `<button type="button" class="rap ${x}" data-lib="r${i}" title="Tocca per cambiare">${x === 'pos' ? '✓' : x === 'neg' ? '✗' : i + 1}</button>`).join('')}</div></div>
-      <div class="acc-lib-esito ${ok.every(Boolean) ? 'pronto' : ''}">${ok.every(Boolean) ? '🎓 Requisiti raggiunti: puoi essere convocato per l\'esame pratico su strada.' : `Ti mancano: ${[!ok[0] && 'bollini verdi', !ok[1] && '14 giorni di affiancamento', !ok[2] && '5 rapporti (almeno 4 positivi)'].filter(Boolean).join(', ')}.`}</div>
-      <p class="acc-lib-n">Promemoria personale: resta solo su questo dispositivo. I bollini ufficiali li assegna l'H.R.</p>
+      <div class="acc-lib-esito ${pronto ? 'pronto' : ''}">${pronto ? '🎓 Requisiti raggiunti: puoi essere convocato per l\'esame pratico su strada.' : `Ti mancano: ${manca.join(', ')}.`}</div>
+      <div class="acc-lib-salva"><div class="lib-stato">${stato}${LIB.salvato ? `<span>Controllo del Comando: <em class="pill st" style="--sc:${cc}">${esc(ct || '')}</em>${LIB.da && LIB.controllo !== 'da_controllare' ? ` · da ${esc(LIB.da)}` : ''}</span>${LIB.nota ? `<span class="lib-nota">💬 ${esc(LIB.nota)}</span>` : ''}` : ''}</div>
+        <button class="btn p" type="button" data-lib-salva ${LIB.sporco || !LIB.salvato ? '' : 'disabled'}>💾 Salva libretto</button></div>
+      <p class="acc-lib-n">Quando salvi, il Comando vede il tuo libretto e ogni modifica resta registrata con data e ora. I bollini ufficiali li assegna l'H.R.: segna solo quelli veri.</p>
     </div>`;
   }
-  document.addEventListener('click', e => {
+  const ridisegnaLib = () => { const el = $('#acc-libretto'); if (el) el.innerHTML = libretto(); };
+  document.addEventListener('click', async e => {
+    if (e.target.closest('[data-lib-salva]')) {
+      const btn = e.target.closest('[data-lib-salva]'); btn.disabled = true;
+      try {
+        const sb = await db(); const s = (await sb.auth.getSession()).data.session;
+        if (!s) { toast('Accedi con Discord per salvare il libretto', 'ko'); btn.disabled = false; return; }
+        const { data, error } = await sb.from(T('libretti')).upsert({ user_id: s.user.id, discord_nome: ACC.utente?.nome || null, avatar: ACC.utente?.avatar || null, dati: libDati() }).select().maybeSingle();
+        if (error) { toast('Salvataggio non riuscito: ' + error.message, 'ko'); btn.disabled = false; return; }
+        Object.assign(LIB, { dati: data?.dati || libDati(), salvato: data?.salvato || new Date().toISOString(), controllo: data?.controllo || 'da_controllare', nota: data?.nota_comando || '', da: data?.controllato_da || '', sporco: false });
+        LS.set('lspd-libretto-bozza', null); toast('Libretto salvato ✓ Il Comando può vederlo', 'ok'); ridisegnaLib();
+      } catch { toast('Salvataggio non riuscito', 'ko'); btn.disabled = false; }
+      return;
+    }
     const b = e.target.closest('[data-lib]'); if (!b || b.tagName === 'INPUT') return;
-    const L = { ...LIB_VUOTO, ...LS.get('lspd-libretto', {}) }, k = b.dataset.lib, i = +k.slice(1);
+    const L = libDati(), k = b.dataset.lib, i = +k.slice(1);
     if (k[0] === 'l') { const giro = ['', 'verde', 'giallo', 'rosso']; L.lezioni = [...L.lezioni]; L.lezioni[i] = giro[(giro.indexOf(L.lezioni[i]) + 1) % giro.length]; }
     if (k[0] === 'r') { const giro = ['', 'pos', 'neg']; L.rapporti = [...L.rapporti]; L.rapporti[i] = giro[(giro.indexOf(L.rapporti[i]) + 1) % giro.length]; }
-    LS.set('lspd-libretto', L); $('#acc-libretto').innerHTML = libretto();
+    LIB.dati = L; LIB.sporco = true; LS.set('lspd-libretto-bozza', L); ridisegnaLib();
   });
   document.addEventListener('change', e => {
     const d = e.target.closest('[data-lib="assunto"]'); if (!d) return;
-    LS.set('lspd-libretto', { ...LIB_VUOTO, ...LS.get('lspd-libretto', {}), assunto: d.value }); $('#acc-libretto').innerHTML = libretto();
+    if (d.value && new Date(d.value) > new Date()) { toast('La data di assunzione non può essere nel futuro', 'ko'); d.value = libDati().assunto; return; }
+    const L = { ...libDati(), assunto: d.value }; LIB.dati = L; LIB.sporco = true; LS.set('lspd-libretto-bozza', L); ridisegnaLib();
   });
   function renderAccademia() {
     const A = ACCAD, oggi = new Date().getDay();
@@ -1136,7 +1172,7 @@
   const COL_STATO = { 'Nuova': 'var(--blu-chiaro)', 'In valutazione': 'var(--giallo)', 'Colloquio fissato': '#a78bfa', 'Accettata': 'var(--verde)', 'Respinta': 'var(--rosso)' };
   const ICO_DC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.099.246.198.373.292a.077.077 0 0 1-.007.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.331c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418z"/></svg>';
   const LUCCHETTO = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.6"/></svg>';
-  const C = { scheda: 'riepilogo', esiti: [], cand: [], membri: [], utente: null, errore: '', fE: 'tutti', fR: 'tutti', qE: '', fS: 'tutti', qC: '', bando: null };
+  const C = { scheda: 'riepilogo', esiti: [], cand: [], membri: [], libretti: [], storico: [], utente: null, errore: '', fE: 'tutti', fR: 'tutti', qE: '', fS: 'tutti', qC: '', bando: null };
   const cmdEl = $('#cmd');
   const quando = s => { const d = new Date(s); return isNaN(d) ? '—' : `${dataIt(d)} ${oraIt(d)}`; };
   const nomeEsame = id => { if (id === 'finale') return 'Esame d\'accademia'; const c = ESAMI.capitoli.find(x => x.id === id); return c ? `Cap. ${c.n} · ${c.titolo}` : id; };
@@ -1166,31 +1202,33 @@
   }
   async function caricaCmd(sb) {
     sb = sb || await db();
-    const [e, c, b, mb] = await Promise.all([
+    const [e, c, b, mb, lb, ls] = await Promise.all([
       sb.from(T('esiti')).select('*').order('creato', { ascending: false }).limit(1000),
       sb.from(T('candidature')).select('*').order('creato', { ascending: false }).limit(500),
       sb.from(T('bandi')).select('*').order('ordine', { ascending: true }),
       sb.from(T('membri')).select('*').order('aggiornato', { ascending: false }).limit(500),
+      sb.from(T('libretti')).select('*').order('salvato', { ascending: false }).limit(500),
+      sb.from(T('libretti_storico')).select('*').order('creato', { ascending: true }).limit(5000),
     ]);
-    C.esiti = e.data || []; C.cand = c.data || []; C.membri = mb.data || [];
+    C.esiti = e.data || []; C.cand = c.data || []; C.membri = mb.data || []; C.libretti = lb.data || []; C.storico = ls.data || [];
     await Promise.all(C.membri.filter(x => x.screen && x.stato !== 'esterno').slice(0, 60).map(async x => { try { const { data } = await sb.storage.from(BUCKET).createSignedUrl(x.screen, 3600); x._url = data?.signedUrl || ''; } catch {} }));
     if (Array.isArray(b.data)) BANDI = b.data.map(r => normBando({ ...(r.dati || {}), id: r.id, ordine: r.ordine }));
     C.errore = [e.error, c.error, b.error, mb.error].filter(Boolean).map(x => x.message).join(' · ');
   }
   function renderCmd() {
-    const nuove = C.cand.filter(x => (x.stato || 'Nuova') === 'Nuova').length, daVer = C.membri.filter(x => x.stato === 'in_verifica').length;
+    const nuove = C.cand.filter(x => (x.stato || 'Nuova') === 'Nuova').length, daVer = C.membri.filter(x => x.stato === 'in_verifica').length, daCtrl = C.libretti.filter(x => x.controllo === 'da_controllare').length;
     cmdEl.innerHTML = `<div class="cmd-testa">
         <div class="cmd-utente"><img src="${esc(C.utente.avatar || avatarBase(C.utente.id || '0'))}" alt="" data-base="${esc(avatarBase(C.utente.id || '0'))}"><div><small>Area Comando · accesso con Discord</small><b>${esc(C.utente.nome)}</b><span>${esc(gradoUtente(C.utente.id))}</span></div></div>
         <div class="cmd-az"><button class="btn piccolo" type="button" data-cmd="aggiorna">↻ Aggiorna</button><button class="btn piccolo ghost" type="button" data-cmd="esci">Esci</button></div>
       </div>
       ${C.errore ? `<p class="bc-nota" style="margin:0 0 14px">Alcuni dati non sono arrivati: ${esc(C.errore)}</p>` : ''}
-      <div class="schede cmd-schede" role="tablist">${[['riepilogo', 'Riepilogo'], ['esiti', `Esiti esami <span class="cnt">${C.esiti.length}</span>`], ['candidature', `Candidature${nuove ? ` <span class="cnt nuovo">${nuove} nuove</span>` : ''}`], ['verifiche', `Verifiche membri${daVer ? ` <span class="cnt nuovo">${daVer} da fare</span>` : ''}`], ['bandi', `Bandi <span class="cnt">${BANDI.length}</span>`]].map(([k, t]) => `<button type="button" role="tab" data-cs="${k}" aria-selected="${C.scheda === k}">${t}</button>`).join('')}</div>
+      <div class="schede cmd-schede" role="tablist">${[['riepilogo', 'Riepilogo'], ['esiti', `Esiti esami <span class="cnt">${C.esiti.length}</span>`], ['candidature', `Candidature${nuove ? ` <span class="cnt nuovo">${nuove} nuove</span>` : ''}`], ['verifiche', `Verifiche membri${daVer ? ` <span class="cnt nuovo">${daVer} da fare</span>` : ''}`], ['libretti', `Libretti${daCtrl ? ` <span class="cnt nuovo">${daCtrl} da controllare</span>` : ` <span class="cnt">${C.libretti.length}</span>`}`], ['bandi', `Bandi <span class="cnt">${BANDI.length}</span>`]].map(([k, t]) => `<button type="button" role="tab" data-cs="${k}" aria-selected="${C.scheda === k}">${t}</button>`).join('')}</div>
       <div id="cmd-corpo"></div>`;
     renderScheda();
   }
   function renderScheda() {
     const el = $('#cmd-corpo'); if (!el) return;
-    el.innerHTML = C.scheda === 'esiti' ? schedaEsiti() : C.scheda === 'candidature' ? schedaCandidature() : C.scheda === 'bandi' ? schedaBandi() : C.scheda === 'verifiche' ? schedaVerifiche() : schedaRiepilogo();
+    el.innerHTML = C.scheda === 'esiti' ? schedaEsiti() : C.scheda === 'candidature' ? schedaCandidature() : C.scheda === 'bandi' ? schedaBandi() : C.scheda === 'verifiche' ? schedaVerifiche() : C.scheda === 'libretti' ? schedaLibretti() : schedaRiepilogo();
   }
   const rigaEsito = e => `<div class="cmd-riga"><span class="pill ${e.superato ? 'si' : 'no'}">${e.superato ? 'Superato' : 'Non sup.'}</span><div><b>${esc(e.nome || '—')}</b><small>${esc(nomeEsame(e.esame))} · ${quando(e.creato)}</small></div><em>${e.percentuale ?? 0}%</em></div>`;
   const rigaCand = c => { const st = c.stato || 'Nuova'; return `<div class="cmd-riga"><span class="pill st" style="--sc:${COL_STATO[st] || 'var(--blu)'}">${esc(st)}</span><div><b>${esc(c.nome || '—')}</b><small>${esc(c.bando_titolo || c.bando_id || '')} · ${quando(c.creato)}</small></div></div>`; };
@@ -1250,6 +1288,45 @@
         ${x._url ? `<a class="cmd-v-img" href="${esc(x._url)}" target="_blank" rel="noopener"><img src="${esc(x._url)}" alt="Screen di verifica" loading="lazy"><span>Apri lo screen ↗</span></a>` : x.stato !== 'esterno' ? '<div class="cmd-v-noimg">Nessuno screen</div>' : ''}
         ${x.stato !== 'esterno' ? `<form class="cmd-v-az" data-uid="${esc(x.user_id)}"><input name="nota" maxlength="200" value="${esc(x.nota || '')}" placeholder="Nota (es. motivo del rifiuto)"><button class="btn verde piccolo" type="submit" value="approvato">✓ Approva</button><button class="btn rosso piccolo" type="submit" value="rifiutato">✗ Rifiuta</button></form>` : ''}
       </article>`).join('') || '<p class="intro-s">Nessuno ha ancora fatto l\'accesso con Discord.</p>'}</div>`;
+  }
+  // libretti: storico delle modifiche e segnali di chi «fa il furbo»
+  function analisiLib(x) {
+    const nb = v => ({ verde: '🟢 verde', giallo: '🟡 giallo', rosso: '🔴 rosso' }[v] || '—'), nr = v => ({ pos: '✓ positivo', neg: '✗ negativo' }[v] || '—');
+    const sosp = [], ev = [];
+    for (const s of C.storico.filter(y => y.user_id === x.user_id)) {
+      const a = { ...LIB_VUOTO, ...(s.prima || {}) }, b = { ...LIB_VUOTO, ...(s.dopo || {}) }, d = [];
+      b.lezioni.forEach((v, i) => { if (v !== a.lezioni[i]) { d.push(`${NOMI_LEZ[i]}: ${nb(a.lezioni[i])} → ${nb(v)}`); if (a.lezioni[i] === 'rosso' && v === 'verde') sosp.push(`${NOMI_LEZ[i]} passato da rosso a verde`); if (a.lezioni[i] === 'giallo' && v === 'verde') sosp.push(`${NOMI_LEZ[i]} passato da giallo a verde`); } });
+      b.rapporti.forEach((v, i) => { if (v !== a.rapporti[i]) { d.push(`Rapporto ${i + 1}: ${nr(a.rapporti[i])} → ${nr(v)}`); if (a.rapporti[i] === 'neg' && v === 'pos') sosp.push(`Rapporto ${i + 1} cambiato da negativo a positivo`); } });
+      if (b.assunto !== a.assunto) {
+        d.push(`Assunzione: ${a.assunto ? dataIt(new Date(a.assunto)) : '—'} → ${b.assunto ? dataIt(new Date(b.assunto)) : '—'}`);
+        if (s.prima && a.assunto) sosp.push(`Data di assunzione cambiata il ${dataIt(new Date(s.creato))}${b.assunto && a.assunto && new Date(b.assunto) < new Date(a.assunto) ? ' (spostata indietro)' : ''}`);
+      }
+      if (s.prima && d.length >= 4) sosp.push(`${d.length} modifiche in un solo salvataggio (${quando(s.creato)})`);
+      if (d.length || !s.prima) ev.push({ quando: s.creato, d, primo: !s.prima });
+    }
+    const st = statLib(x.dati), primo = C.storico.find(y => y.user_id === x.user_id);
+    if (st.L.assunto && primo && (new Date(primo.creato) - new Date(st.L.assunto)) / 864e5 > 30) sosp.push(`Assunzione dichiarata ${Math.round((new Date(primo.creato) - new Date(st.L.assunto)) / 864e5)} giorni prima del primo salvataggio`);
+    if (st.L.assunto && st.giorni < 14 && st.fatti >= 5) sosp.push(`5 rapporti in soli ${st.giorni} giorni`);
+    return { ev, sosp: [...new Set(sosp)], st };
+  }
+  function schedaLibretti() {
+    const ord = { da_controllare: 0, non_corrisponde: 1, corretto: 2 };
+    const L = C.libretti.map(x => ({ x, a: analisiLib(x) })).sort((p, q) => (q.a.sosp.length > 0) - (p.a.sosp.length > 0) || (ord[p.x.controllo] ?? 9) - (ord[q.x.controllo] ?? 9));
+    const nb = { verde: 'v', giallo: 'g', rosso: 'r' };
+    return `<p class="intro-s">I libretti che le reclute salvano dall'Accademia. Ogni modifica resta nello storico con data e ora e l'agente non può cancellarla; se cambia qualcosa dopo il vostro controllo, il libretto torna «Da controllare». In cima ci sono quelli con segnali sospetti.</p>
+      <div class="cmd-ver">${L.map(({ x, a }) => { const [ct, cc] = CTRL[x.controllo] || CTRL.da_controllare, m = C.membri.find(y => y.user_id === x.user_id), st = a.st; return `<article class="cmd-v cmd-lib" style="--sc:${a.sosp.length ? 'var(--rosso)' : cc}">
+        <div class="cmd-v-t"><img src="${esc(x.avatar || avatarBase(x.discord_id || '0'))}" alt="" data-base="${esc(avatarBase(x.discord_id || '0'))}"><div><b>${esc(m?.nome || x.discord_nome || '—')}</b><small>${esc(x.discord_nome || '')}${m?.grado ? ` · ${esc(m.grado)}` : ''}${x.discord_id ? ` · <a href="https://discord.com/users/${esc(x.discord_id)}" target="_blank" rel="noopener">profilo Discord</a>` : ''}</small></div><span class="pill st" style="--sc:${cc}">${esc(ct)}</span></div>
+        <div class="lib-riass">
+          <div><small>Lezioni</small><span>${st.L.lezioni.map((v, i) => `<i class="lb ${nb[v] || ''}" title="${NOMI_LEZ[i]}"></i>`).join('')}</span><b>${st.verdi}/3</b></div>
+          <div><small>Affiancamento</small><b>${st.giorni == null ? '—' : `${st.giorni}/14 g`}</b></div>
+          <div><small>Rapporti</small><span>${st.L.rapporti.map(v => `<i class="lr ${v}">${v === 'pos' ? '✓' : v === 'neg' ? '✗' : ''}</i>`).join('')}</span><b>${st.pos}/${st.fatti}</b></div>
+        </div>
+        <div class="cmd-v-g">${st.pronto ? '<b style="color:var(--verde)">🎓 Dichiara i requisiti per l\'esame pratico</b> · ' : ''}Ultimo salvataggio ${quando(x.salvato)} · ${x.modifiche || 1} salvataggi</div>
+        ${a.sosp.length ? `<div class="lib-sosp"><b>⚠ Da controllare bene</b><ul>${a.sosp.map(z => `<li>${esc(z)}</li>`).join('')}</ul></div>` : ''}
+        <details class="lib-det"><summary>Storico modifiche (${a.ev.length})</summary><ol class="lib-storia">${[...a.ev].reverse().map(e => `<li><time>${quando(e.quando)}</time>${e.primo ? '<b>Primo salvataggio</b>' : ''}${e.d.map(z => `<span>${esc(z)}</span>`).join('')}</li>`).join('') || '<li>Nessuna modifica registrata</li>'}</ol></details>
+        <form class="cmd-v-az cmd-lib-az" data-luid="${esc(x.user_id)}"><input name="nota" maxlength="300" value="${esc(x.nota_comando || '')}" placeholder="Nota per l'agente (es. il rapporto 3 non risulta)"><button class="btn verde piccolo" type="submit" value="corretto">✓ Corretto</button><button class="btn rosso piccolo" type="submit" value="non_corrisponde">✗ Non corrisponde</button></form>
+        ${x.controllato_da ? `<small class="lib-ctrl">Controllato da ${esc(x.controllato_da)} · ${quando(x.controllato)}</small>` : ''}
+      </article>`; }).join('') || '<p class="intro-s">Nessuna recluta ha ancora salvato il libretto.</p>'}</div>`;
   }
   function schedaBandi() {
     if (C.bando) return editorBando(C.bando === 'nuovo' ? null : BANDI.find(b => b.id === C.bando));
@@ -1319,6 +1396,15 @@
   cmdEl.addEventListener('submit', async e => {
     e.preventDefault();
     if (e.target.id === 'cmd-bando') return salvaBando(e.target);
+    const fl = e.target.closest('.cmd-lib-az');
+    if (fl) {
+      const controllo = e.submitter?.value, nota = String(new FormData(fl).get('nota') || '').trim(), sb = await db();
+      if (!['corretto', 'non_corrisponde'].includes(controllo)) return;
+      const { error } = await sb.from(T('libretti')).update({ controllo, nota_comando: nota || null }).eq('user_id', fl.dataset.luid);
+      if (error) { toast('Salvataggio non riuscito: ' + error.message, 'ko'); return; }
+      const x = C.libretti.find(y => y.user_id === fl.dataset.luid); if (x) { x.controllo = controllo; x.nota_comando = nota; x.controllato_da = C.utente?.nome || ''; x.controllato = new Date().toISOString(); }
+      toast(controllo === 'corretto' ? 'Libretto segnato come corretto ✓' : 'Libretto segnato come non corrispondente: l\'agente vede la tua nota', controllo === 'corretto' ? 'ok' : 'ko'); renderCmd(); return;
+    }
     const fv = e.target.closest('.cmd-v-az');
     if (fv) {
       const stato = e.submitter?.value, nota = String(new FormData(fv).get('nota') || '').trim(), sb = await db();
