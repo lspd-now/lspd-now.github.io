@@ -273,7 +273,7 @@
   }
 
   /* ═════════════ VISTE E NAVIGAZIONE ═════════════ */
-  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
+  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), accademia: $('#v-accademia'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
   let vista = null;
   function risolvi(h) {
     if (!h || h === 'top' || h === 'home') return { v: 'home' };
@@ -287,6 +287,7 @@
     if (h === 'esami' || h === 'esame') return { v: 'esami' };
     if (h === 'attestato') return { v: 'esami', attestato: true };
     if (h === 'comando') return { v: 'comando' };
+    if (h === 'accademia') return { v: 'accademia' };
     if (h.startsWith('esame-')) return { v: 'esami', esame: h.slice(6) };
     return { v: 'home' };
   }
@@ -330,6 +331,7 @@
     }
     if (r.v === 'home') aggiornaBandiHome();
     if (r.v === 'comando') areaComando();
+    if (r.v === 'accademia') accademia();
     if (!scorso && cambia) scrollTo({ top: 0, ...SALTA });
     rivela(); scorri();
   }
@@ -1042,6 +1044,93 @@
   }
   document.addEventListener('click', e => { const x = e.target.closest('[data-battiva]'); if (x) { e.preventDefault(); e.stopPropagation(); cambiaAttivo(x.dataset.battiva, x.dataset.on === '1'); } }, true);
 
+  /* ═════════════ ACCADEMIA · solo membri LSPD (il contenuto sta nell'archivio protetto) ═════════════ */
+  const GIORNI = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+  let ACCAD = null, accTimer = null;
+  async function accademia() {
+    const box = $('#accademia'); if (!box) return;
+    if (!ACCAD) {
+      box.innerHTML = '<p class="intro-s">Carico l\'accademia…</p>';
+      try { const sb = await db(); const { data } = await sb.from(T('riservati')).select('dati').eq('id', 'accademia').maybeSingle(); ACCAD = data?.dati || null; } catch {}
+      if (!ACCAD) { box.innerHTML = `<div class="cmd-porta blocco"><div class="cmd-lucchetto">${LUCCHETTO}</div><small>Accademia riservata</small><h2>Contenuto non disponibile</h2><p>Calendario e percorso dell'accademia si caricano solo per i membri verificati della LSPD. Accedi con Discord e riprova.</p></div>`; return; }
+    }
+    renderAccademia();
+    clearInterval(accTimer); accTimer = setInterval(() => { if (vista === 'accademia' && !document.hidden) aggiornaProssima(); }, 1000);
+  }
+  function lezioniDa(now) {
+    const out = [];
+    for (const l of ACCAD.lezioni || []) {
+      const [hi, mi] = l.inizio.split(':').map(Number), [hf, mf] = l.fine.split(':').map(Number);
+      for (let k = 0; k < 8; k++) {
+        const d = new Date(now); d.setDate(now.getDate() + k); if (d.getDay() !== l.g) continue;
+        const ini = new Date(d); ini.setHours(hi, mi, 0, 0); const fin = new Date(d); fin.setHours(hf, mf, 0, 0);
+        if (fin <= now) continue;
+        out.push({ ...l, ini, fin }); break;
+      }
+    }
+    return out.sort((a, b) => a.ini - b.ini);
+  }
+  function aggiornaProssima() {
+    const el = $('#acc-prox'); if (!el || !ACCAD) return;
+    const now = new Date(), [p, dopo] = lezioniDa(now); if (!p) { el.innerHTML = '<small>Prossima lezione</small><b>Nessuna in calendario</b>'; return; }
+    const inCorso = now >= p.ini, oggi = p.ini.toDateString() === now.toDateString();
+    const giorno = oggi ? 'Oggi' : (p.ini - now < 2 * 864e5 && new Date(now.getTime() + 864e5).toDateString() === p.ini.toDateString()) ? 'Domani' : GIORNI[p.g];
+    el.dataset.stato = inCorso ? 'corso' : (p.ini - now < 36e5 ? 'presto' : '');
+    el.innerHTML = `<small>${inCorso ? '● Lezione in corso' : 'Prossima lezione'}</small>
+      <b>${esc(giorno)} · ${esc(p.inizio)}–${esc(p.fine)}</b><span class="acc-tipo ${esc(p.tipo.toLowerCase())}">${esc(p.tipo)}</span>
+      <div class="acc-cd">${inCorso ? `Finisce tra <em>${quanto(p.fin - now)}</em>` : `Inizia tra <em>${quanto(p.ini - now)}</em>`}</div>
+      ${!inCorso && p.ini - now < 36e5 ? '<p class="acc-avviso">Mettiti in divisa e raggiungi il desk: si entra con 5–10 minuti di anticipo.</p>' : dopo ? `<p class="acc-dopo">Poi: ${esc(GIORNI[dopo.g])} ${esc(dopo.inizio)} · ${esc(dopo.tipo)}</p>` : ''}`;
+  }
+  const LIB_VUOTO = { lezioni: ['', '', ''], rapporti: ['', '', '', '', ''], assunto: '' };
+  function libretto() {
+    const L = { ...LIB_VUOTO, ...LS.get('lspd-libretto', {}) };
+    const verdi = L.lezioni.filter(x => x === 'verde').length, pos = L.rapporti.filter(x => x === 'pos').length, fatti = L.rapporti.filter(Boolean).length;
+    const giorni = L.assunto ? Math.max(0, Math.floor((Date.now() - new Date(L.assunto)) / 864e5)) : null;
+    const ok = [verdi >= 3, giorni != null && giorni >= 14, fatti >= 5 && pos >= 4];
+    const nomiL = ['Teorico 1', 'Teorico 2', 'Pratico'];
+    return `<div class="acc-lib">
+      <div class="acc-lib-c"><h4>Lezioni <small>${verdi}/3 verdi</small></h4><div class="acc-slot">${L.lezioni.map((x, i) => `<button type="button" class="bol ${x}" data-lib="l${i}" title="Tocca per cambiare">${nomiL[i]}<i></i></button>`).join('')}</div></div>
+      <div class="acc-lib-c"><h4>Affiancamento <small>${giorni == null ? 'da iniziare' : `${giorni} giorni su 14`}</small></h4><label class="acc-data">Assunto il <input type="date" data-lib="assunto" value="${esc(L.assunto)}"></label><div class="acc-barra"><span style="width:${Math.min(100, (giorni || 0) / 14 * 100)}%"></span></div></div>
+      <div class="acc-lib-c"><h4>Rapporti <small>${pos} positivi su ${fatti}/5</small></h4><div class="acc-slot r">${L.rapporti.map((x, i) => `<button type="button" class="rap ${x}" data-lib="r${i}" title="Tocca per cambiare">${x === 'pos' ? '✓' : x === 'neg' ? '✗' : i + 1}</button>`).join('')}</div></div>
+      <div class="acc-lib-esito ${ok.every(Boolean) ? 'pronto' : ''}">${ok.every(Boolean) ? '🎓 Requisiti raggiunti: puoi essere convocato per l\'esame pratico su strada.' : `Ti mancano: ${[!ok[0] && 'bollini verdi', !ok[1] && '14 giorni di affiancamento', !ok[2] && '5 rapporti (almeno 4 positivi)'].filter(Boolean).join(', ')}.`}</div>
+      <p class="acc-lib-n">Promemoria personale: resta solo su questo dispositivo. I bollini ufficiali li assegna l'H.R.</p>
+    </div>`;
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-lib]'); if (!b || b.tagName === 'INPUT') return;
+    const L = { ...LIB_VUOTO, ...LS.get('lspd-libretto', {}) }, k = b.dataset.lib, i = +k.slice(1);
+    if (k[0] === 'l') { const giro = ['', 'verde', 'giallo', 'rosso']; L.lezioni = [...L.lezioni]; L.lezioni[i] = giro[(giro.indexOf(L.lezioni[i]) + 1) % giro.length]; }
+    if (k[0] === 'r') { const giro = ['', 'pos', 'neg']; L.rapporti = [...L.rapporti]; L.rapporti[i] = giro[(giro.indexOf(L.rapporti[i]) + 1) % giro.length]; }
+    LS.set('lspd-libretto', L); $('#acc-libretto').innerHTML = libretto();
+  });
+  document.addEventListener('change', e => {
+    const d = e.target.closest('[data-lib="assunto"]'); if (!d) return;
+    LS.set('lspd-libretto', { ...LIB_VUOTO, ...LS.get('lspd-libretto', {}), assunto: d.value }); $('#acc-libretto').innerHTML = libretto();
+  });
+  function renderAccademia() {
+    const A = ACCAD, oggi = new Date().getDay();
+    const sett = [1, 2, 3, 4, 5, 6, 0].map(g => { const ls = (A.lezioni || []).filter(l => l.g === g); return `<div class="acc-g${g === oggi ? ' oggi' : ''}${ls.length ? '' : ' vuoto'}"><b>${GIORNI[g]}</b>${ls.length ? ls.map(l => `<span class="acc-l ${esc(l.tipo.toLowerCase())}"><i>${esc(l.inizio)}–${esc(l.fine)}</i>${esc(l.tipo)}</span>`).join('') : '<em>Nessuna lezione</em>'}</div>`; }).join('');
+    $('#accademia').innerHTML = `
+      <div class="acc-top rivela">
+        <div class="acc-prox" id="acc-prox"></div>
+        <div class="acc-luogo"><small>Dove</small><b>${esc(A.luogo || '')}</b><span>${esc(A.anticipo || '')}</span></div>
+      </div>
+      <div class="sez-testa rivela"><small>Calendario</small><h2>Lezioni della settimana</h2></div>
+      <div class="acc-sett rivela">${sett}</div>
+      <div class="sez-testa rivela"><small>Prima di presentarsi</small><h2>Requisiti obbligatori</h2></div>
+      <div class="acc-req rivela">${(A.requisiti || []).map(([i, t, d]) => `<div class="acc-r"><span>${esc(i)}</span><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join('')}</div>
+      <div class="sez-testa rivela"><small>Valutazione H.R.</small><h2>I bollini</h2></div>
+      <div class="acc-bollini rivela">${(A.bollini || []).map(([c, t, d]) => `<div class="acc-b ${esc(c)}"><i></i><b>Bollino ${esc(t.toLowerCase())}</b><p>${esc(d)}</p></div>`).join('')}</div>
+      <div class="acc-obiettivo rivela"><span>🟢🟢🟢</span><p>${esc(A.obiettivo || '')}</p></div>
+      <div class="sez-testa rivela"><small>Dal bando all'Agente I</small><h2>Il percorso</h2></div>
+      <ol class="acc-percorso rivela">${(A.percorso || []).map(([t, p], i) => `<li><span class="n">${i + 1}</span><div><b>${esc(t)}</b><ul>${p.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></li>`).join('')}</ol>
+      <div class="sez-testa rivela"><small>Solo per te</small><h2>Il mio libretto</h2></div>
+      <div id="acc-libretto" class="rivela">${libretto()}</div>
+      ${(A.note || []).map(n => `<div class="box vietato rivela" style="margin-top:14px"><b class="e">N.B.</b><p>${esc(n)}</p></div>`).join('')}
+      ${A.firma ? `<p class="acc-firma rivela">${esc(A.firma[0])}<b>${esc(A.firma[1] || '')}</b></p>` : ''}`;
+    aggiornaProssima(); rivela();
+  }
+
   /* ═════════════ AREA COMANDO (accesso con Discord) ═════════════ */
   const STATI_C = ['Nuova', 'In valutazione', 'Colloquio fissato', 'Accettata', 'Respinta'];
   const COL_STATO = { 'Nuova': 'var(--blu-chiaro)', 'In valutazione': 'var(--giallo)', 'Colloquio fissato': '#a78bfa', 'Accettata': 'var(--verde)', 'Respinta': 'var(--rosso)' };
@@ -1290,7 +1379,7 @@
   }
   function mostraBloccato(v) {
     mostraVista('bloccato');
-    const nome = { strumenti: 'Strumenti', esami: 'Esami' }[v] || 'Sezione riservata';
+    const nome = { strumenti: 'Strumenti', esami: 'Esami', accademia: 'Accademia' }[v] || 'Sezione riservata';
     const [t, c] = ETICH[ACC.stato] || ETICH.ospite;
     const testo = ACC.stato === 'in_verifica' ? 'Il tuo screen è in verifica: appena l\'Alto Comando lo approva, questa sezione si apre da sola.'
       : ACC.stato === 'rifiutato' ? `La verifica non è stata approvata${ACC.riga?.nota ? ` (${esc(ACC.riga.nota)})` : ''}. Puoi mandare un nuovo screen.`

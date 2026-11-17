@@ -29,6 +29,7 @@ window.GU_IMPOSTAZIONI = {
   // Chi entra nell'Area Comando lo decide invece l'archivio (tabella lspd_comandanti).
   altoComando: [
     { grado: 'Capo della Polizia', discordId: '670641594558316574', nome: '' },
+    { grado: 'Vice Capo della Polizia', discordId: '339005588707213313', nome: '' },
     { grado: 'Comandante', discordId: '267362907522727946', nome: '' },
     { grado: 'Capitano', discordId: '542468183588864036', nome: '' }
   ]
