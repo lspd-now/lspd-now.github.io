@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LSPD · NOW V4</title>
+<meta name="description" content="Manuale operativo, strumenti, bandi ed esami del Los Santos Police Department · NOW V4 Roleplay.">
+<meta name="theme-color" content="#050a18">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow, noarchive, noimageindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 170'%3E%3Cpath d='M75 6 L138 28 V82 C138 122 110 150 75 164 C40 150 12 122 12 82 V28 Z' fill='%231e6bff' stroke='%23e8b84a' stroke-width='8'/%3E%3Cpath d='M75 44 l9 19 21 3 -15 15 4 21 -19 -10 -19 10 4 -21 -15 -15 21 -3z' fill='%23e8b84a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="stile/sito.css">
+</head>
+<body data-minaccia="verde" data-defcon="5">
+<script>document.documentElement.classList.add('js')</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="g-stemma" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f7dff"/><stop offset="1" stop-color="#0f2f86"/></linearGradient></defs><symbol id="stemma" viewBox="0 0 150 170"><path d="M75 6 L138 28 V82 C138 122 110 150 75 164 C40 150 12 122 12 82 V28 Z" fill="url(#g-stemma)" stroke="#e8b84a" stroke-width="4"/><path d="M75 20 L126 38 V82 C126 114 104 137 75 149 C46 137 24 114 24 82 V38 Z" fill="none" stroke="#e8b84a" stroke-opacity=".5" stroke-width="1.5"/><path d="M75 44 l9 19 21 3 -15 15 4 21 -19 -10 -19 10 4 -21 -15 -15 21 -3z" fill="#e8b84a"/><text x="75" y="132" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="20" letter-spacing="3" fill="#fff">LSPD</text></symbol></svg>
+<a class="salta" href="#contenuto-principale">Vai al contenuto</a>
+
+<!-- ═════════ SCHERMATA INIZIALE ═════════ -->
+<div class="intro" id="intro" hidden aria-hidden="true">
+  <div class="barra-luci"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="intro-alone b"></div><div class="intro-alone r"></div><div class="intro-griglia"></div>
+  <svg class="skyline" id="skyline" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+  <div class="intro-centro">
+    <span class="emblema"><span class="radar"></span><span class="radar r2"></span><img src="immagini/logo.png" alt="" onerror="this.remove()"><svg viewBox="0 0 150 170"><use href="#stemma"/></svg></span>
+    <div class="intro-lspd">LSPD</div>
+    <div class="intro-motto">TO PROTECT AND TO SERVE</div>
+    <div class="intro-radio" id="intro-radio"></div>
+    <div class="intro-carica"><i id="intro-barra"></i></div>
+    <div class="intro-stato" id="intro-stato">AVVIO DEL TERMINALE MDT…</div>
+    <button class="link intro-salta" id="intro-salta" type="button">Salta ›</button>
+  </div>
+</div>
+
+<!-- ═════════ BARRA IN ALTO ═════════ -->
+<header class="barra" id="barra">
+  <div class="in">
+    <a class="marchio" href="#home"><span class="emblema"><img src="immagini/logo.png" alt="" onerror="this.remove()"><svg viewBox="0 0 150 170"><use href="#stemma"/></svg></span><div><b>LSPD</b><small>NOW V4 · POLIZIA</small></div></a>
+    <div class="menu" id="menu">
+      <nav class="nav" aria-label="Sezioni del sito">
+        <a href="#home" data-v="home">Home</a>
+        <a href="#regolamento" data-v="regolamento">Manuale</a>
+        <a href="#strumenti" data-v="strumenti">Strumenti</a>
+        <a href="#bandi" data-v="bandi">Bandi<span class="nav-num" id="nav-bandi" hidden></span></a>
+        <a href="#esami" data-v="esami">Esami</a>
+        <a href="#comando" data-v="comando" class="nav-cmd"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Comando</a>
+      </nav>
+      <label class="cerca" for="q">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Cerca nel manuale… (premi /)" autocomplete="off" aria-label="Cerca nel manuale">
+        <span class="esito" id="esito"></span>
+      </label>
+    </div>
+    <span class="defcon-chip" id="defcon-chip" title="Livello di allerta della città"><i></i><b>DEFCON 5</b></span>
+    <button class="account" id="account" type="button" hidden></button>
+    <button class="menu-btn" id="menu-btn" type="button" aria-controls="menu" aria-expanded="false" aria-label="Apri il menu"><span></span><span></span><span></span></button>
+  </div>
+  <div class="sirena-linea" aria-hidden="true"></div>
+  <div class="avanz" id="avanz"></div>
+</header>
+
+<main id="contenuto-principale">
+
+<!-- ═════════════════════════ HOME ═════════════════════════ -->
+<section class="vista" id="v-home" data-vista="home" aria-label="Home">
+  <div class="hero hero-lspd">
+    <div class="hero-foto" id="hero-foto" aria-hidden="true"><img class="on" src="immagini/foto/squadra-schiena.jpg" alt=""><img src="immagini/foto/volanti.jpg" alt="" loading="lazy"><img src="immagini/foto/pattuglia-a-piedi.jpg" alt="" loading="lazy"></div>
+    <canvas id="scintille" aria-hidden="true"></canvas>
+    <div class="lampeggianti" aria-hidden="true"><i class="lb"></i><i class="lr"></i></div>
+    <div class="scan" aria-hidden="true"></div>
+    <div class="hero-centro">
+      <span class="emblema"><span class="radar"></span><span class="radar r2"></span><img src="immagini/logo.png" alt="" onerror="this.remove()"><svg viewBox="0 0 150 170"><use href="#stemma"/></svg></span>
+      <div class="hero-nome">Los Santos Police Department</div>
+      <div class="hero-motto">TO PROTECT AND TO SERVE</div>
+    </div>
+    <div class="hero-tag"><span class="chip rosso"><i></i>Uso interno</span><span class="chip"><i></i>Lettura obbligatoria</span><span class="chip blu"><i></i>9 capitoli · 10 esami</span></div>
+  </div>
+
+  <div class="wrap">
+    <div class="scheda rivela">
+      <div class="titolo-doc">
+        <div class="td-testo">
+          <div class="codice">MANUALE OPERATIVO LSPD · NOW RP · AGGIORNATO AL 14/11/2026</div>
+          <h1 class="titolone"><span>Manuale</span><span>Operativo</span></h1>
+          <div class="sotto">Dipartimento · Procedure · Codici · Disciplina</div>
+          <p>Il Dipartimento di Polizia di Los Santos si impegna a proteggere la vita, i beni e i diritti dei cittadini, mantenendo l'ordine pubblico e facendo rispettare la legge con professionalità, responsabilità e con la trasparenza più assoluta.</p>
+          <div class="azioni">
+            <a class="btn p" href="#cap-1">Inizia a leggere <span aria-hidden="true">→</span></a>
+            <a class="btn" href="#esami">Centro esami</a>
+            <a class="btn ghost" href="#bandi" id="cta-bandi">Bandi aperti</a>
+          </div>
+        </div>
+        <div class="tilt" id="tilt"><div class="tilt-in tilt-stemma"><span class="emblema"><img src="immagini/logo.png" alt="" onerror="this.remove()"><svg viewBox="0 0 150 170"><use href="#stemma"/></svg></span><span class="riflesso"></span></div><div class="alone" aria-hidden="true"></div></div>
+        <div class="timbro" aria-hidden="true">Riservato<small>Solo personale LSPD</small></div>
+      </div>
+      <div class="dati">
+        <div class="anello"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="a-bg"/><circle cx="60" cy="60" r="52" class="a-fg" id="anello"/></svg><div><b id="letti-n">0</b><span id="letti-t">di 0 articoli letti</span></div></div>
+        <dl>
+          <div><dt>Documento</dt><dd>Manuale operativo</dd></div>
+          <div><dt>Aggiornato</dt><dd>14/11/2026</dd></div>
+          <div><dt>Destinatari</dt><dd>Tutto il personale LSPD</dd></div>
+          <div><dt>Gestione</dt><dd>Alto Comando · H.R.</dd></div>
+          <div><dt>Classificazione</dt><dd>Riservato · uso interno</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="centrale rivela">
+      <div class="defcon-box" id="defcon-box"></div>
+      <div class="radio-live">
+        <div class="rl-testa"><span class="rl-on"><i></i>IN ONDA</span><b>Centrale operativa</b><small>Simulazione del canale radio</small></div>
+        <div class="rl-feed" id="rl-feed" aria-live="off"></div>
+      </div>
+    </div>
+
+    <div class="numeri rivela">
+      <div><b data-conta="12">12</b><span>Gradi</span></div>
+      <div><b data-conta="5">5</b><span>Fasce</span></div>
+      <div><b id="n-art">0</b><span>Articoli</span></div>
+      <div><b id="n-cod">0</b><span>Codici radio</span></div>
+      <div><b id="n-dom">0</b><span>Domande d'esame</span></div>
+    </div>
+
+    <div class="bando-evidenza" id="bando-evidenza" hidden></div>
+
+    <div class="sez-testa rivela"><small>Accesso rapido</small><h2>Tutto quello che serve in servizio</h2></div>
+    <div class="categorie">
+      <a class="cat rivela" href="#regolamento" style="--c:#1e6bff"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5V4.5M8 7h8M8 11h6"/></svg></span><b>Manuale operativo</b><span>9 capitoli, con ricerca e progressi di lettura</span></a>
+      <a class="cat rivela" href="#art-1-2" style="--c:#e8b84a"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><b>Gerarchia</b><span>12 gradi in 5 fasce, dalla Recluta al Capo della Polizia</span></a>
+      <a class="cat rivela" href="#strumenti-radio" style="--c:#8db8ff"><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="8" width="12" height="14" rx="2"/><path d="M9 8V2M10 13h4M10 17h4"/></svg></span><b>Codici radio</b><span>TEN codes, codici d'emergenza e status, con allenamento</span></a>
+      <a class="cat rivela" href="#strumenti-prontuario" style="--c:#ff3b3b"><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v17h14V5h-2"/><path d="m8.5 13 2.2 2.2L15.5 10.5"/></svg></span><b>Prontuario</b><span>Checklist passo per passo per ogni intervento</span></a>
+      <a class="cat rivela" href="#art-9-1" style="--c:#2fd38a"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 3 7v5c0 5 4 8 9 9 5-1 9-4 9-9V7z"/><path d="M12 8v5M12 16v.01"/></svg></span><b>DEFCON</b><span>I 5 livelli di allerta e cosa cambia in servizio</span></a>
+      <a class="cat rivela" href="#strumenti-carriera" style="--c:#a78bfa"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20h4v-6H4zM10 20h4V9h-4zM16 20h4V4h-4z"/></svg></span><b>Carriera</b><span>Grado per grado: tempi e requisiti di promozione</span></a>
+      <a class="cat rivela" href="#bandi" style="--c:#ffc94a"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14"/></svg></span><b>Bandi</b><span>Posti aperti e candidature con esito sul sito</span></a>
+      <a class="cat rivela" href="#esami" style="--c:#ff9f43"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5z"/><path d="M6 10.5V16c3 2.5 9 2.5 12 0v-5.5M22 8v6"/></svg></span><b>Esami</b><span>9 verifiche di capitolo e l'esame d'accademia</span></a>
+      <a class="cat rivela" href="#strumenti-faq" style="--c:#22d3ee"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.8-2.5 2.2-2.5 4M12 17.5v.01"/></svg></span><b>Domande frequenti</b><span>Le risposte rapide ai dubbi più comuni</span></a>
+    </div>
+
+    <div class="sez-testa rivela"><small>Il manuale</small><h2>Capitoli</h2></div>
+    <div class="capi-zona">
+      <nav class="capi-a" aria-label="Capitoli">
+        <a class="cap-a rivela" href="#cap-1" data-cap="cap-1" style="--c:#1e6bff"><span class="gigante" aria-hidden="true">I</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo I · <span class="n-art"></span></small><b>Il Dipartimento</b><p>Missione, gerarchia, divisioni e condotta</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-2" data-cap="cap-2" style="--c:#e8b84a"><span class="gigante" aria-hidden="true">II</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo II · <span class="n-art"></span></small><b>Comportamento</b><p>Regole generali, sanzioni e segnalazioni</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-3" data-cap="cap-3" style="--c:#22d3ee"><span class="gigante" aria-hidden="true">III</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo III · <span class="n-art"></span></small><b>Equipaggiamento</b><p>Dotazione, arma d'ordinanza e panic button</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-4" data-cap="cap-4" style="--c:#ff3b3b"><span class="gigante" aria-hidden="true">IV</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo IV · <span class="n-art"></span></small><b>Procedure</b><p>Arresti, perquisizioni, rapine e identificazione</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-5" data-cap="cap-5" style="--c:#2fd38a"><span class="gigante" aria-hidden="true">V</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo V · <span class="n-art"></span></small><b>Codici e radio</b><p>Macro codici, pattuglie e coordinamento</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-6" data-cap="cap-6" style="--c:#ff9f43"><span class="gigante" aria-hidden="true">VI</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo VI · <span class="n-art"></span></small><b>Formazione</b><p>Reclute, sergenti, sicurezza e manovre</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-7" data-cap="cap-7" style="--c:#a78bfa"><span class="gigante" aria-hidden="true">VII</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo VII · <span class="n-art"></span></small><b>Prove e codice penale</b><p>Prove, PDA, reati e pene</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-8" data-cap="cap-8" style="--c:#8db8ff"><span class="gigante" aria-hidden="true">VIII</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo VIII · <span class="n-art"></span></small><b>Reparti speciali</b><p>S.W.A.T. e C.I.D.</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+        <a class="cap-a rivela" href="#cap-9" data-cap="cap-9" style="--c:#2fd38a"><span class="gigante" aria-hidden="true">IX</span><span class="freccia" aria-hidden="true">→</span><small>Capitolo IX · <span class="n-art"></span></small><b>DEFCON</b><p>I livelli di allerta della città</p><div class="piede"><span class="stato">da leggere</span><span class="barretta"><i></i></span></div></a>
+      </nav>
+      <aside class="alto-comando rivela" id="alto-comando" aria-label="Comando LSPD">
+        <div class="ac-testa"><small>★ Comando LSPD</small><h3>Chi guida il Dipartimento</h3></div>
+        <div id="ac-lista"></div>
+        <p class="ac-nota">Per segnalare un comportamento scorretto: ticket alle <b>Risorse Umane</b> (<a href="#art-2-7">art. 2.7</a>).</p>
+      </aside>
+    </div>
+    <div class="sez-testa rivela"><small>Galleria</small><h2>LSPD in servizio</h2><span class="sez-dx">Tocca una foto per ingrandirla</span></div>
+    <div class="galleria" id="galleria"></div>
+    <div class="esami-banda rivela"><a class="cap-a esa" href="#esami"><span class="gigante" aria-hidden="true">★</span><span class="freccia" aria-hidden="true">→</span><small>10 esami · attestato</small><b>Esami</b><p>Sei pronto per il servizio? Mettiti alla prova</p><div class="piede"><span class="stato" id="capi-esami">9 verifiche e l'esame d'accademia</span></div></a></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ MANUALE ═════════════════════════ -->
+<section class="vista" id="v-regolamento" data-vista="regolamento" aria-label="Manuale" hidden>
+  <div class="wrap">
+    <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/agente-schiena.jpg')">
+      <div><small>MANUALE OPERATIVO · AGG. 14/11/2026</small><h1>Manuale <span>LSPD</span></h1><p>Tocca <b>Segna come letto</b> alla fine di ogni articolo: i progressi restano salvati su questo dispositivo. Alla fine di ogni capitolo trovi la sua verifica.</p></div>
+      <div class="pt-anello"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="a-bg"/><circle cx="60" cy="60" r="52" class="a-fg" id="anello2"/></svg><div><b id="letti-n2">0%</b><span>letto</span></div></div>
+    </div>
+  </div>
+  <div class="corpo">
+    <aside class="indice" id="indice" aria-label="Indice">
+      <h4>Indice</h4>
+      <ol id="toc"></ol>
+    </aside>
+    <div class="contenuto" id="contenuto">
+
+<!-- ═════════ CAPITOLO I ═════════ -->
+<section class="capitolo" id="cap-1" data-r="I" data-t="Il Dipartimento">
+  <div class="cap-testa"><span class="num">I</span><div><small>Capitolo primo</small><h2>Introduzione al LSPD</h2></div></div>
+
+  <article class="art" id="art-1-1" data-t="Missione e valori">
+    <h3><span class="ref">ART. 1.1</span>Missione e valori</h3>
+    <p>Il Dipartimento di Polizia di Los Santos (LSPD) si impegna a proteggere la vita, i beni e i diritti dei cittadini, mantenendo l'ordine pubblico e facendo rispettare la legge con professionalità, responsabilità e con la trasparenza più assoluta.</p>
+    <h4>Valori fondamentali</h4>
+    <ul>
+      <li><b>Rispetto</b>: agire sempre con onestà e rispetto.</li>
+      <li><b>Disciplina</b>: rispettare regole e ordini in ogni momento.</li>
+      <li><b>Responsabilità</b>: essere consapevoli del proprio ruolo.</li>
+      <li><b>Coraggio</b>: affrontare ogni situazione con determinazione.</li>
+    </ul>
+    <figure class="foto-art"><img src="immagini/foto/mini/pattuglia-coppia.jpg" alt="Pattuglia LSPD in servizio" loading="lazy" data-grande="immagini/foto/pattuglia-coppia.jpg"><figcaption>Pattuglia LSPD in servizio</figcaption></figure>
+  </article>
+
+  <article class="art" id="art-1-2" data-t="Gerarchia e struttura">
+    <h3><span class="ref">ART. 1.2</span>Gerarchia e struttura interna</h3>
+    <p>L'LSPD è organizzato secondo una catena di comando gerarchica, dove ogni grado ha ruoli e responsabilità ben definiti. Rispettare questa struttura è essenziale per garantire disciplina, ordine e operatività.</p>
+    <div class="piramide" id="piramide"></div>
+    <ul>
+      <li>L'<b>Alto Comando</b> rappresenta il vertice del Dipartimento: prende le decisioni strategiche, gestisce l'organizzazione interna e garantisce il corretto funzionamento dell'intero corpo.</li>
+      <li>Gli <b>Ufficiali</b>, come Capitani e Tenenti, coordinano le operazioni sul campo, supervisionano gli agenti e assicurano che le direttive del comando vengano applicate.</li>
+      <li>I <b>Sottufficiali</b> supervisionano la truppa e garantiscono il corretto svolgimento delle operazioni, coordinando gli agenti sul campo e assicurando il rispetto delle procedure.</li>
+      <li>La <b>Truppa</b> è composta dagli agenti operativi: il personale in prima linea incaricato di pattugliamenti, controlli, arresti e interventi sul territorio.</li>
+      <li>L'<b>Accademia</b> è il centro di formazione del dipartimento, dove le reclute ricevono l'addestramento teorico e pratico necessario per diventare agenti.</li>
+    </ul>
+  </article>
+
+  <article class="art" id="art-1-3" data-t="Divisioni e abilitazioni">
+    <h3><span class="ref">ART. 1.3</span>Divisioni e abilitazioni operative</h3>
+    <div class="tab"><table>
+      <thead><tr><th>Divisione</th><th>Compito</th></tr></thead>
+      <tbody>
+        <tr><td class="sig">PATROL DIVISION</td><td>Controllo stradale e interventi urbani.</td></tr>
+        <tr><td class="sig">S.W.A.T.</td><td>Interventi ad alto rischio.</td></tr>
+        <tr><td class="sig">C.I.D.</td><td>Investigazioni e crimini complessi.</td></tr>
+        <tr><td class="sig">H.R.</td><td>Human Resource: assunzioni, carriere e istruzione.</td></tr>
+        <tr><td class="sig">H.S.U.</td><td>Intercettazione e inseguimenti di veicoli.</td></tr>
+        <tr><td class="sig">MARY</td><td>Pattugliamento con utilizzo di motocicli.</td></tr>
+        <tr><td class="sig">A.S.D.</td><td>Supporto al pattugliamento con elicotteri.</td></tr>
+      </tbody>
+    </table></div>
+  </article>
+
+  <article class="art" id="art-1-4" data-t="Codice di condotta">
+    <h3><span class="ref">ART. 1.4</span>Codice di condotta e deontologia</h3>
+    <p>Tutti gli agenti del dipartimento devono mantenere un comportamento professionale, etico e rispettoso, sia in servizio che fuori servizio. È fondamentale agire con imparzialità, onestà e integrità, evitando qualsiasi forma di abuso di potere o discriminazione.</p>
+    <p>Il rispetto delle leggi e delle procedure interne è obbligatorio, così come la tutela della privacy e dei diritti dei cittadini.</p>
+    <div class="box vietato"><b class="e">ATTENZIONE</b><p>Le violazioni del codice possono comportare sanzioni disciplinari, fino al licenziamento.</p></div>
+  </article>
+
+  <article class="art" id="art-1-5" data-t="Progressione professionale">
+    <h3><span class="ref">ART. 1.5</span>Iter di progressione professionale</h3>
+    <p>Per ogni promozione vengono valutati diversi fattori chiave:</p>
+    <ul>
+      <li>l'<b>anzianità di servizio</b>;</li>
+      <li>il <b>rispetto delle regole disciplinari</b>, considerando eventuali note o infrazioni;</li>
+      <li>la <b>corretta esecuzione di tutti gli iter operativi</b> (rapporti, arresti, procedure);</li>
+      <li>l'<b>atteggiamento</b> dimostrato sul campo.</li>
+    </ul>
+    <p>Questi elementi insieme determinano l'idoneità del candidato a ricoprire ruoli di maggiore responsabilità.</p>
+    <div class="box nota"><b class="e">NOTA</b><p>Se tutte le valutazioni operative e disciplinari risultano positive, le revisioni per la progressione di grado per anzianità si fanno con cadenza minima di <b>due settimane (14 giorni)</b> dall'ultima promozione conseguita.</p></div>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO II ═════════ -->
+<section class="capitolo" id="cap-2" data-r="II" data-t="Comportamento">
+  <div class="cap-testa"><span class="num">II</span><div><small>Capitolo secondo</small><h2>Regole generali e di comportamento</h2></div></div>
+
+  <article class="art" id="art-2-1" data-t="Linguaggio e atteggiamento">
+    <h3><span class="ref">ART. 2.1</span>Linguaggio e atteggiamento in servizio</h3>
+    <p>Durante il servizio, ogni agente deve mantenere un linguaggio professionale, chiaro e rispettoso, evitando espressioni offensive o inappropriate.</p>
+    <p>L'atteggiamento deve essere calmo, autorevole e imparziale, dimostrando controllo emotivo anche nelle situazioni più difficili. Il comportamento corretto rafforza la fiducia della comunità e facilita la gestione degli interventi.</p>
+  </article>
+
+  <article class="art" id="art-2-2" data-t="Comunicazioni radio">
+    <h3><span class="ref">ART. 2.2</span>Uso corretto delle comunicazioni radio</h3>
+    <p>Le comunicazioni radio devono essere chiare, concise e professionali. È fondamentale usare il linguaggio codificato del dipartimento con i tre <b>Macro Codici</b> (TEN Codes, STATUS Codes e CAR Codes), evitare distrazioni o conversazioni non pertinenti e trasmettere solo informazioni rilevanti e urgenti.</p>
+    <p>Un uso corretto garantisce efficienza, sicurezza e coordinamento durante le operazioni. I codici sono all'<a href="#art-5-1">art. 5.1</a>.</p>
+  </article>
+
+  <article class="art" id="art-2-3" data-t="Presenza e puntualità">
+    <h3><span class="ref">ART. 2.3</span>Presenza e puntualità</h3>
+    <p>Gli agenti devono garantire la propria presenza regolare e rispettare gli orari di servizio con puntualità: è fondamentale per l'efficienza operativa e per una copertura continua delle attività di polizia.</p>
+    <p>Ritardi o assenze ingiustificate possono compromettere il lavoro di squadra e comportare sanzioni disciplinari.</p>
+    <div class="box obbligo"><b class="e">OBBLIGO</b><p>Un'assenza di <b>più di tre giorni</b> senza avviso nella sezione «Ferie» può portare a sanzioni disciplinari.</p></div>
+  </article>
+
+  <article class="art" id="art-2-4" data-t="Reportistica">
+    <h3><span class="ref">ART. 2.4</span>Reportistica e completamento</h3>
+    <p>I rapporti devono essere compilati seguendo i template in modo completo e accurato. In caso di mancata compilazione, l'operatore responsabile è soggetto a sanzioni disciplinari.</p>
+  </article>
+
+  <article class="art" id="art-2-5" data-t="Fuori servizio">
+    <h3><span class="ref">ART. 2.5</span>Comportamento fuori servizio</h3>
+    <p>Anche fuori servizio gli agenti devono comportarsi in modo responsabile, per non compromettere la reputazione del dipartimento. Ogni poliziotto rappresenta l'LSPD in ogni momento: comportamenti scorretti possono portare a sanzioni disciplinari.</p>
+  </article>
+
+  <article class="art" id="art-2-6" data-t="Sanzioni">
+    <h3><span class="ref">ART. 2.6</span>Sanzioni per condotta scorretta</h3>
+    <p>Le violazioni vengono sanzionate in modo proporzionato:</p>
+    <div class="scala">
+      <div style="--c:#8db8ff"><b>1</b><span>Richiamo</span><small>Verbale o scritto, per infrazioni leggere</small></div>
+      <div style="--c:var(--giallo)"><b>2</b><span>Servizio desk</span><small>Compiti amministrativi e limitazioni operative</small></div>
+      <div style="--c:#ff9f43"><b>3</b><span>Sospensione</span><small>Temporanea dal servizio, per violazioni gravi</small></div>
+      <div style="--c:#ff6b6b"><b>4</b><span>Retrogradazione</span><small>Per condotte estremamente gravi</small></div>
+      <div style="--c:var(--rosso)"><b>5</b><span>Licenziamento</span><small>Per condotte estremamente gravi</small></div>
+    </div>
+  </article>
+
+  <article class="art" id="art-2-7" data-t="Segnalazione interna">
+    <h3><span class="ref">ART. 2.7</span>Procedura di segnalazione interna</h3>
+    <p>Ogni agente che osserva violazioni o comportamenti scorretti deve seguire la procedura di segnalazione interna.</p>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Farsi giustizieri o punire personalmente i colleghi trasgressori: ogni intervento disciplinare spetta esclusivamente alle Risorse Umane o ai sottufficiali in su, per garantire correttezza e imparzialità.</p></div>
+    <h4>La segnalazione deve includere</h4>
+    <ul>
+      <li>dati dell'operatore che segnala;</li>
+      <li>orario e data dell'evento;</li>
+      <li>bodycam dell'accaduto;</li>
+      <li>descrizione dettagliata dell'accaduto.</li>
+    </ul>
+    <p>Si inoltra alle <b>Risorse Umane</b> tramite ticket.</p>
+  </article>
+
+  <article class="art" id="art-2-8" data-t="Rispetto del ruolo">
+    <h3><span class="ref">ART. 2.8</span>Rispetto del ruolo</h3>
+    <p>Essere un agente del LSPD significa molto più che indossare una divisa: implica assumersi una responsabilità verso la comunità, verso i colleghi e verso se stessi. Ogni poliziotto rappresenta l'autorità, la legge e i valori del dipartimento.</p>
+    <p>Rispettare il ruolo significa comprendere il peso delle proprie azioni, seguire la gerarchia e le direttive dei superiori o del <b>Coordinatore</b>, collaborare con i colleghi senza interferire indebitamente nelle loro operazioni e agire sempre secondo protocolli e procedure ufficiali.</p>
+    <p>Disciplina, correttezza e imparzialità non sono semplici obblighi, ma pilastri che garantiscono fiducia e rispetto nella comunità.</p>
+    <div class="box obbligo"><b class="e">ATTENZIONE</b><p>Il mancato rispetto del ruolo può comportare richiami, servizio desk o provvedimenti disciplinari, e mina la credibilità dell'intero dipartimento.</p></div>
+  </article>
+
+  <article class="art" id="art-2-9" data-t="Tatuaggi, capelli ed estetica">
+    <h3><span class="ref">ART. 2.9</span>Tatuaggi, capelli ed estetica</h3>
+    <ul>
+      <li><b>Tatuaggi</b>: consentiti, purché non coprano il volto e non presentino segni, simboli o riferimenti riconducibili a organizzazioni criminali.</li>
+      <li><b>Capelli</b>: ordinati e conformi al decoro della divisa, evitando colori non naturali o stili non appropriati al servizio.</li>
+    </ul>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO III ═════════ -->
+<section class="capitolo" id="cap-3" data-r="III" data-t="Equipaggiamento">
+  <div class="cap-testa"><span class="num">III</span><div><small>Capitolo terzo</small><h2>Equipaggiamento e mezzi</h2></div></div>
+
+  <article class="art" id="art-3-1" data-t="Equipaggiamento">
+    <h3><span class="ref">ART. 3.1</span>Equipaggiamento</h3>
+    <p>Gli agenti ricevono una dotazione standard per essere totalmente operativi e pronti a ogni evenienza in campo.</p>
+    <div class="dotazione">
+      <span>👮 Divisa ufficiale</span><span>⭐ Distintivo</span><span>⚡ Taser</span><span>🔫 Pistola d'ordinanza e caricatori</span><span>🎒 Fondina e cinturone tattico</span><span>📱 Tablet MDT</span><span>🎥 Bodycam</span><span>📻 Radio</span><span>🔦 Torcia</span><span>🪵 Manganello</span><span>🛡 GAP (giubbotto antiproiettile)</span><span>🩹 Kit di primo soccorso</span>
+    </div>
+  </article>
+
+  <article class="art" id="art-3-2" data-t="Arma d'ordinanza">
+    <h3><span class="ref">ART. 3.2</span>Arma d'ordinanza</h3>
+    <p>Gli agenti utilizzano unicamente l'arma d'ordinanza fornita dall'armeria della centrale LSPD.</p>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Portare o impiegare armi non in dotazione alla polizia o di provenienza dubbia. La violazione comporta gravi sanzioni disciplinari.</p></div>
+    <div class="box nota"><b class="e">NOTA</b><p>Se l'arma d'ordinanza ha problemi o malfunzionamenti, l'agente avvisa subito i sottufficiali in servizio o i superiori, che la sostituiscono.</p></div>
+  </article>
+
+  <article class="art" id="art-3-3" data-t="Panic button">
+    <h3><span class="ref">ART. 3.3</span>Utilizzo del panic button</h3>
+    <p>Il <b>Panic Button</b> è in dotazione alle forze dell'ordine e va tenuto sempre con sé, in tasca. Si usa esclusivamente in situazioni di <b>emergenza reale</b>: per esempio quando l'agente è in pericolo di vita o non può comunicare via radio.</p>
+    <p>Una volta attivato invia automaticamente una segnalazione a tutte le unità operative, con la posizione esatta dell'agente, permettendo un intervento immediato e coordinato.</p>
+    <div class="box vietato"><b class="e">VIETATO</b><p>L'uso improprio o ingiustificato del Panic Button: può comportare provvedimenti disciplinari.</p></div>
+    <div class="box obbligo"><b class="e">OBBLIGO</b><p>Dopo l'attivazione, una volta ristabilita la sicurezza, l'agente spiega e relaziona l'accaduto.</p></div>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO IV ═════════ -->
+<section class="capitolo" id="cap-4" data-r="IV" data-t="Procedure operative">
+  <div class="cap-testa"><span class="num">IV</span><div><small>Capitolo quarto</small><h2>Procedure operative</h2></div></div>
+
+  <article class="art" id="art-4-1" data-t="Procedure sul campo e minacce">
+    <h3><span class="ref">ART. 4.1</span>Procedure sul campo e gestione delle minacce</h3>
+    <p>Ogni intervento segue protocolli precisi per garantire legalità, sicurezza e coerenza. L'impiego di qualsiasi arma deve essere <b>proporzionato alla minaccia</b>.</p>
+    <ol>
+      <li>Riconoscere la situazione di pericolo.</li>
+      <li>Chiamare supporto.</li>
+      <li>Mettere in sicurezza l'area.</li>
+      <li>Valutare il rischio.</li>
+      <li>Agire con forza proporzionata.</li>
+    </ol>
+  </article>
+
+  <article class="art" id="art-4-2" data-t="Controlli stradali">
+    <h3><span class="ref">ART. 4.2</span>Controlli stradali e identificazione</h3>
+    <p>Gli agenti fermano i veicoli in modo sicuro, identificano correttamente conducenti e passeggeri e verificano documenti e precedenti.</p>
+  </article>
+
+  <article class="art" id="art-4-3" data-t="Interventi su chiamata">
+    <h3><span class="ref">ART. 4.3</span>Interventi su chiamata</h3>
+    <p>Le chiamate sono gestite soprattutto dagli <b>agenti coordinatori</b> in servizio, che indicano alle ADAM sul campo dove convergere e con quanti operatori intervenire.</p>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Le Reclute non possono rispondere alle chiamate d'emergenza, né uscire in pattuglia da sole o in coppia con un'altra Recluta.</p></div>
+    <div class="box obbligo"><b class="e">OBBLIGO DI AFFIANCAMENTO</b><p>La Recluta prende servizio esterno solo se affiancata da un operatore di grado pari o superiore ad <b>Agente I</b> (preferibilmente un Agente III+1, un Istruttore o un Sottufficiale), che ne assume la supervisione diretta.</p></div>
+  </article>
+
+  <article class="art" id="art-4-4" data-t="Arma da fuoco">
+    <h3><span class="ref">ART. 4.4</span>Utilizzo dell'arma da fuoco</h3>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Aprire il fuoco per primi.</p></div>
+    <p>L'uso dell'arma da fuoco è consentito solo:</p>
+    <ul>
+      <li>in caso di <b>pericolo di vita</b> per l'operatore o per i civili;</li>
+      <li>durante <b>operazioni di blitz autorizzate</b>;</li>
+      <li>per fermare la fuga di un soggetto su veicolo, <b>limitatamente a colpi alle ruote</b>.</li>
+    </ul>
+    <p>In ogni caso l'impiego dell'arma deve essere proporzionato alla minaccia.</p>
+  </article>
+
+  <article class="art" id="art-4-5" data-t="Codice penale e centrale">
+    <h3><span class="ref">ART. 4.5</span>Codice penale e uso della centrale</h3>
+    <p>Per fermi e arresti si consulta la centrale operativa per verifiche e inserimenti, e si applicano correttamente le violazioni in base al codice penale o civile.</p>
+  </article>
+
+  <article class="art" id="art-4-6" data-t="Arresto e Miranda">
+    <h3><span class="ref">ART. 4.6</span>Procedura di arresto e Miranda Warning</h3>
+    <ol>
+      <li>Il soggetto si mette in stato di arresto <b>solo dopo aver letto il Miranda Warning</b>, prima dell'entrata in centrale LSPD.</li>
+      <li>Foto segnaletica con nome e cognome sull'applicativo, sezione <b>FOTO SEGNALETICHE</b>.</li>
+      <li>Trasferimento al <b>carcere di Bolingbroke</b>.</li>
+      <li>Arresto definitivo con inserimento del tempo di pena e dei reati.</li>
+    </ol>
+    <div class="modulo"><div class="mh"><b>Miranda Warning</b><button class="copia" type="button">Copia</button></div><pre>La dichiaro in stato d'arresto, ha il diritto di rimanere in silenzio.
+Qualsiasi cosa dirà o farà potrà essere usata contro di lei in tribunale.
+Ha diritto ad un avvocato: se non se ne può permettere uno, gliene sarà assegnato uno d'ufficio.
+Ha compreso i suoi diritti?</pre></div>
+    <div class="box nota"><b class="e">NOTA</b><p>I diritti si leggono almeno una volta al momento dell'arresto preventivo e il sospettato risponde «Sì» se li ha compresi. Si possono ripetere se non li ha davvero compresi, ma non è obbligatorio rileggerli più volte se non collabora. Non si applicano ulteriori reati a chi finge di non capire.</p></div>
+  </article>
+
+  <article class="art" id="art-4-7" data-t="Perquisizione">
+    <h3><span class="ref">ART. 4.7</span>Procedura di perquisizione</h3>
+    <p>La perquisizione <b>senza mandato</b> è consentita solo quando gli operatori hanno una forte presunzione che nel veicolo o addosso al soggetto ci siano armi, munizioni, droga o esplosivi, oppure che il soggetto sia mascherato.</p>
+    <p>Se la perquisizione ha esito positivo, l'operatore può procedere con un <b>sequestro temporaneo</b>, che va poi convalidato dal procuratore con un mandato.</p>
+    <div class="box nota"><b class="e">NOTA</b><p>Dal livello <a href="#art-9-1">DEFCON 3</a> in su le perquisizioni dei cittadini sono consentite durante i fermi o in qualsiasi momento, se ritenute necessarie.</p></div>
+  </article>
+
+  <article class="art" id="art-4-8" data-t="Ostaggi e rapine">
+    <h3><span class="ref">ART. 4.8</span>Contrattazione ostaggi, rapine e ostaggi</h3>
+    <ul>
+      <li>Una richiesta di contrattazione per ostaggi va comunicata al <b>superiore più alto in grado</b> disponibile in quel momento.</li>
+      <li>All'arrivo si mette in sicurezza l'area <b>bloccando ogni via di fuga</b>.</li>
+      <li>Con ostaggi: si avvia la negoziazione e si soddisfano le richieste necessarie per proteggerne l'incolumità.</li>
+      <li>Senza ostaggi: si impedisce la fuga e si intima la resa; in caso di rifiuto si procede con l'irruzione.</li>
+    </ul>
+    <div class="box radio"><b class="e">PRIORITÀ</b><p>Rapine a Fleeca Bank, Blaine County Bank, Gioielleria Vangelico e Pacific Standard Bank: priorità S.W.A.T. (<a href="#art-5-3">art. 5.3</a>).</p></div>
+  </article>
+
+  <article class="art" id="art-4-9" data-t="Bodycam e prove">
+    <h3><span class="ref">ART. 4.9</span>Bodycam e prove</h3>
+    <p>Le prove servono alla procura e al giudice per classificare realmente un reato: senza di esse gli arresti non sono leciti.</p>
+    <div class="box obbligo"><b class="e">OBBLIGO</b><p>Avere una bodycam efficiente e operativa. Le prove si conservano per un massimo di <b>48 ore</b> dall'arresto.</p></div>
+    <div class="box vietato"><b class="e">ATTENZIONE</b><p>Se la bodycam non è disponibile, per qualsiasi ragione, si va incontro a sanzioni gravi.</p></div>
+  </article>
+
+  <article class="art" id="art-4-10" data-t="Maschere">
+    <h3><span class="ref">ART. 4.10</span>Utilizzo di maschere</h3>
+    <p>Le maschere che coprono il volto in servizio sono riservate esclusivamente ai reparti <b>C.I.D.</b> e <b>S.W.A.T.</b>. Il personale dell'investigativa può svolgere le proprie funzioni anche indossando la maschera.</p>
+    <div class="box vietato"><b class="e">VIETATO</b><p>A chi non appartiene a C.I.D. o S.W.A.T., salvo eccezioni specificamente autorizzate.</p></div>
+  </article>
+
+  <article class="art" id="art-4-11" data-t="Sanzioni massime">
+    <h3><span class="ref">ART. 4.11</span>Sanzioni massime e cumulo dei reati</h3>
+    <div class="tab"><table>
+      <thead><tr><th>Voce</th><th>Limite</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sanzione pecuniaria in un arresto</b></td><td>Massimo $25.000,00</td></tr>
+        <tr><td><b>Detenzione</b></td><td>Massimo 8 mesi (8 minuti effettivi). Le pene detentive sono cumulabili.</td></tr>
+        <tr><td><b>Codice della strada</b></td><td>Massimo $25.000,00, indipendentemente dal numero di infrazioni</td></tr>
+      </tbody>
+    </table></div>
+    <h4>Cumulo dei reati di classe C e B</h4>
+    <p>I reati di classe C e B si sommano fino a un massimo di <b>cinque</b>: raggiunto il limite, il cumulo equivale a un reato di classe superiore.</p>
+    <ul>
+      <li>B + B + B + B + B = un reato di <b>classe A</b>.</li>
+      <li>C + C + C + C + C = un reato di <b>classe B</b>.</li>
+      <li>I reati di <b>classe D</b> sono solo illeciti amministrativi, non penali.</li>
+    </ul>
+  </article>
+
+  <article class="art" id="art-4-12" data-t="Identificazione dei cittadini">
+    <h3><span class="ref">ART. 4.12</span>Identificazione dei cittadini</h3>
+    <p>Quando un agente ferma una persona, a bordo di un veicolo o in arresto, deve sempre riconoscerne l'identità.</p>
+    <ol>
+      <li>La prima modalità è <b>sempre</b> la richiesta del documento d'identità cartaceo: se il cittadino lo esibisce, è valido e sufficiente.</li>
+      <li>Solo se il documento cartaceo manca si procede, obbligatoriamente, all'identificazione tramite <b>impronta digitale</b> con l'apposito tablet.</li>
+    </ol>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Chiedere l'impronta digitale sul tablet se il documento cartaceo è presente e regolarmente fornito.</p></div>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO V ═════════ -->
+<section class="capitolo" id="cap-5" data-r="V" data-t="Codici e comunicazioni">
+  <div class="cap-testa"><span class="num">V</span><div><small>Capitolo quinto</small><h2>Codici e comunicazioni</h2></div></div>
+
+  <article class="art" id="art-5-1" data-t="Codici radio">
+    <h3><span class="ref">ART. 5.1</span>Codici radio · Macro codici</h3>
+    <p>I <b>TEN Codes</b>, i <b>CAR Codes</b> e gli <b>STATUS Codes</b> sono un sistema di comunicazione rapido e standardizzato, chiamati insieme «Macro Codici».</p>
+    <h4>TEN codes</h4>
+    <div class="radio-ctl" role="group" aria-label="Filtra i codici radio">
+      <input type="search" placeholder="Cerca un codice o un significato" aria-label="Cerca codice radio">
+      <button class="filtro" type="button" data-f="tutti" aria-pressed="true">Tutti</button>
+      <button class="filtro" type="button" data-f="stato" aria-pressed="false">Stato</button>
+      <button class="filtro" type="button" data-f="intervento" aria-pressed="false">Intervento</button>
+      <button class="filtro" type="button" data-f="emergenza" aria-pressed="false">Emergenza</button>
+    </div>
+    <div class="tab"><table id="radio"><thead><tr><th>Codice</th><th>Significato</th><th>Tipo</th></tr></thead><tbody></tbody></table></div>
+    <h4>Codici d'emergenza</h4>
+    <div class="tab"><table>
+      <thead><tr><th>Codice</th><th>Significato</th><th>Sirene</th><th>Lampeggianti</th></tr></thead>
+      <tbody>
+        <tr><td class="cod">Codice 0</td><td>Emergenza massima: attacco alle istituzioni, convergere in Codice 3</td><td>Sì</td><td>Sì</td></tr>
+        <tr><td class="cod">Codice 1</td><td>Possibile situazione di pericolo</td><td>No</td><td>No</td></tr>
+        <tr><td class="cod">Codice 2</td><td>Possibile situazione di pericolo</td><td>No</td><td>Sì</td></tr>
+        <tr><td class="cod">Codice 3</td><td>Situazione di pericolo accertato</td><td>Sì</td><td>Sì</td></tr>
+        <tr><td class="cod">Codice 4</td><td>Situazione sotto controllo</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+    <h4>Status ADAM</h4>
+    <div class="tab"><table>
+      <thead><tr><th>Status</th><th>Significato</th></tr></thead>
+      <tbody>
+        <tr><td class="cod">Status 1</td><td>Pattuglia disponibile (10-50, pattugliamento)</td></tr>
+        <tr><td class="cod">Status 2</td><td>Pattuglia impegnata in operazione</td></tr>
+        <tr><td class="cod">Status 3</td><td>Pattuglia non disponibile (10-80, 10-60…)</td></tr>
+        <tr><td class="cod">Status 4</td><td>Pattuglia in rientro con sospettati</td></tr>
+      </tbody>
+    </table></div>
+  </article>
+
+  <article class="art" id="art-5-2" data-t="Nomenclatura pattuglie">
+    <h3><span class="ref">ART. 5.2</span>Nomenclatura delle pattuglie</h3>
+    <figure class="foto-art"><img src="immagini/foto/mini/volanti.jpg" alt="Le volanti di una ADAM in servizio" loading="lazy" data-grande="immagini/foto/volanti.jpg"><figcaption>Le volanti di una ADAM in servizio</figcaption></figure>
+    <div class="unita">
+      <div style="--c:#1e6bff"><b>ADAM</b><p>Unità base da due agenti, fino a un massimo di tre. Pattugliamenti standard e chiamate di routine.</p></div>
+      <div style="--c:#e8b84a"><b>LINCOLN</b><p>Alto Comando o Ufficiali in pattuglia: attenzione al loro GPS. Funzioni gestionali della truppa o logistiche.</p></div>
+      <div style="--c:#a78bfa"><b>C.O.M.M.A.</b><p>Coordinatore Operativo Mobile in Missione e Assistenza: pattuglia guidata da un coordinatore o supervisore, controlla e coordina la truppa sul campo.</p></div>
+      <div style="--c:#ff3b3b"><b>DAVID</b><p>Pattuglia tattica S.W.A.T.: interventi ad alto rischio, convogli blindati, almeno due ADAM di supporto e un blindato.</p></div>
+      <div style="--c:#2fd38a"><b>MARY</b><p>Unità motociclistica: interventi rapidi, controllo del traffico e inseguimenti agili.</p></div>
+      <div style="--c:#ff9f43"><b>SPEED</b><p>High Speed Unit: inseguimenti ad alta velocità e corse clandestine.</p></div>
+      <div style="--c:#22d3ee"><b>NAVY</b><p>Imbarcazioni della divisione marina: pattugliamenti costieri, portuali e fluviali.</p></div>
+      <div style="--c:#8db8ff"><b>EAGLE</b><p>Unità aeree: supporto visivo dall'alto e assistenza tattica.</p></div>
+    </div>
+  </article>
+
+  <article class="art" id="art-5-3" data-t="Priorità delle chiamate">
+    <h3><span class="ref">ART. 5.3</span>Priorità delle chiamate</h3>
+    <p>In specifiche situazioni ad alto rischio la <b>S.W.A.T. ha priorità operativa assoluta</b>: esclusivamente nei blitz o negli interventi presso Fleeca Bank, Blaine County Bank, Gioielleria Vangelico e Pacific Standard Bank, e negli arresti mirati di sospettati ricercati.</p>
+    <p>Le altre unità supportano, ma agiscono solo su coordinamento S.W.A.T.; il C.I.D. interviene per eventuali investigazioni.</p>
+  </article>
+
+  <article class="art" id="art-5-4" data-t="Coordinamento con altri reparti">
+    <h3><span class="ref">ART. 5.4</span>Coordinamento con altri reparti</h3>
+    <p>Ogni unità ha competenze specifiche, ma tutte agiscono in sinergia seguendo le direttive del <b>coordinatore</b>, che gestisce la scena e assegna i compiti.</p>
+    <ul>
+      <li><b>ADAM</b>: primo livello di intervento, mantengono il controllo iniziale fino all'arrivo dei rinforzi.</li>
+      <li><b>LINCOLN</b>: supervisione e supporto tattico.</li>
+      <li><b>S.W.A.T.</b>: priorità nelle situazioni ad alto rischio (rapine, blitz, arresti di soggetti pericolosi); le altre unità supportano su sua indicazione e del coordinatore.</li>
+      <li><b>MARY</b>: interventi rapidi e inseguimenti urbani. <b>SPEED</b>: scenari ad ampio raggio, soprattutto in autostrada.</li>
+      <li><b>EAGLE</b>: sorveglianza aerea e tracciamento dall'alto. <b>NAVY</b>: ambito marino, costiero o fluviale.</li>
+    </ul>
+  </article>
+
+  <article class="art" id="art-5-5" data-t="Procedure di intervento">
+    <h3><span class="ref">ART. 5.5</span>Procedure di intervento e gestione</h3>
+    <p>Ogni intervento si classifica in base alla gravità; il coordinatore valuta le priorità e assegna le unità più adatte.</p>
+    <div class="livelli rischio">
+      <div class="livello" style="--c:var(--verde)"><b><i></i>Rischio basso</b><p>Piccoli furti, disturbo, controlli di routine. Pattuglie ADAM o LINCOLN.</p></div>
+      <div class="livello" style="--c:var(--giallo)"><b><i></i>Rischio medio</b><p>Inseguimenti, sospetti armati, soggetti pericolosi non confermati. Anche MARY, SPEED ed eventualmente EAGLE.</p></div>
+      <div class="livello" style="--c:var(--rosso)"><b><i></i>Rischio alto</b><p>Rapine in corso, ostaggi, ricercati confermati, attacchi organizzati. Priorità S.W.A.T. con tutte le unità sotto coordinamento centrale.</p></div>
+    </div>
+  </article>
+
+  <article class="art" id="art-5-6" data-t="Insubordinazione">
+    <h3><span class="ref">ART. 5.6</span>Insubordinazione al coordinamento</h3>
+    <p>L'insubordinazione verso il coordinatore compromette la sicurezza e l'efficacia delle operazioni: la disobbedienza causa confusione e ritardi e mette a rischio vite. Tutti seguono le direttive con disciplina e collaborazione.</p>
+    <div class="box vietato"><b class="e">ATTENZIONE</b><p>In caso di insubordinazione grave si applicano sanzioni disciplinari, fino alla sospensione dal servizio.</p></div>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO VI ═════════ -->
+<section class="capitolo" id="cap-6" data-r="VI" data-t="Formazione e sicurezza">
+  <div class="cap-testa"><span class="num">VI</span><div><small>Capitolo sesto</small><h2>Formazione, procedure e disciplina</h2></div></div>
+
+  <article class="art" id="art-6-1" data-t="Formazione reclute">
+    <h3><span class="ref">ART. 6.1</span>Formazione delle reclute</h3>
+    <figure class="foto-art destra"><img src="immagini/foto/mini/agente-murales.jpg" alt="Un agente all'addestramento" loading="lazy" data-grande="immagini/foto/agente-murales.jpg"><figcaption>Un agente all'addestramento</figcaption></figure>
+    <p>La formazione è gestita dalle <b>Risorse Umane (H.R.)</b> e prepara le reclute con addestramento pratico, lezioni teoriche e simulazioni.</p>
+    <h4>Per diventare agente la recluta deve</h4>
+    <ul>
+      <li>ottenere <b>quattro rapporti di pattuglia</b>;</li>
+      <li>essere presente ad almeno <b>due lezioni teoriche</b> e <b>una lezione pratica</b>;</li>
+      <li>aver maturato almeno <b>cinque giorni di servizio attivo</b> da recluta.</li>
+    </ul>
+  </article>
+
+  <article class="art" id="art-6-2" data-t="Formazione sergenti">
+    <h3><span class="ref">ART. 6.2</span>Formazione dei sergenti</h3>
+    <p>Per accedere al grado di Sergente bisogna aver ricoperto il grado di <b>Agente III per almeno due settimane</b>, affiancati da Agenti III+1 con maggiore anzianità sul campo.</p>
+    <p>Solo chi dimostra capacità eccellenti nel coordinare le squadre può chiedere di sostenere l'<b>esame per l'avanzamento a Sergente</b>.</p>
+  </article>
+
+  <article class="art" id="art-6-3" data-t="Interazione civile e territorio">
+    <h3><span class="ref">ART. 6.3</span>Interazione civile e controllo del territorio</h3>
+    <p>Nei contatti con i civili ogni agente mantiene un comportamento rispettoso e professionale, puntando a risolvere le situazioni <b>senza uso della forza</b>, se non strettamente necessario.</p>
+    <p>Pattugliamenti regolari e visibili prevengono i reati e garantiscono sicurezza: gli agenti monitorano le aree a rischio e intervengono tempestivamente. Gli agenti coordinatori mantengono la città il più coperta possibile.</p>
+  </article>
+
+  <article class="art" id="art-6-4" data-t="Procedure di sicurezza">
+    <h3><span class="ref">ART. 6.4</span>Procedure di sicurezza</h3>
+    <ul>
+      <li>Radio usata in modo corretto: comunicazioni brevi, chiare e in codice, senza interferenze superflue.</li>
+      <li>Segnalare costantemente la propria posizione, soprattutto durante inseguimenti o situazioni di pericolo.</li>
+      <li>Nessun agente agisce da solo senza aver prima informato il comando e richiesto supporto, quando necessario.</li>
+      <li>Armi sempre controllate e in sicurezza, con la <b>sicura inserita</b> fino all'ordine di impiegarle, soprattutto nei fermi stradali.</li>
+    </ul>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Estrarre le armi d'ordinanza senza una valida e comprovata motivazione operativa.</p></div>
+  </article>
+
+  <article class="art" id="art-6-5" data-t="Manovre operative">
+    <h3><span class="ref">ART. 6.5</span>Manovre operative</h3>
+    <div class="unita">
+      <div style="--c:#1e6bff"><b>Manovra «T»</b><p>La pattuglia si mette di traverso davanti al veicolo sospetto, formando una «T».</p></div>
+      <div style="--c:#8db8ff"><b>«Double T»</b><p>Versione rinforzata: due pattuglie bloccano insieme il veicolo, una frontalmente e una lateralmente.</p></div>
+      <div style="--c:#a78bfa"><b>Manovra «BOX»</b><p>Accerchiamento totale del veicolo con più unità: davanti, dietro e ai lati.</p></div>
+      <div style="--c:#ff3b3b"><b>Manovra «PIT»</b><p>Urto controllato nella parte posteriore del veicolo per fargli perdere aderenza e fermarlo.</p></div>
+    </div>
+    <div class="tab"><table>
+      <thead><tr><th>Strada</th><th>Velocità massima</th></tr></thead>
+      <tbody><tr><td><b>Autostrade</b></td><td>160 km/h</td></tr><tr><td><b>Strade extraurbane</b></td><td>100 km/h</td></tr></tbody>
+    </table></div>
+    <h4>Quando si può fare la PIT</h4>
+    <ol>
+      <li>Solo <b>fuori dall'ambiente urbano</b> e solo sulle <b>auto</b> (no moto o altri veicoli).</li>
+      <li>Solo dopo eventuali danni causati dal sospetto alla guida.</li>
+      <li>Dopo <b>tre minuti</b> di inseguimento con <b>tre ALT</b>, uno al minuto.</li>
+      <li>Si notificano al coordinatore o al superiore posizione esatta e velocità: è lui a confermare la manovra.</li>
+    </ol>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO VII ═════════ -->
+<section class="capitolo" id="cap-7" data-r="VII" data-t="Prove e codice penale">
+  <div class="cap-testa"><span class="num">VII</span><div><small>Capitolo settimo</small><h2>Prove, PDA e codice penale</h2></div></div>
+
+  <article class="art" id="art-7-1" data-t="Prove investigative">
+    <h3><span class="ref">ART. 7.1</span>Prove investigative</h3>
+    <p>In caso di gravi reati o ritrovamenti rilevanti (grandi quantità di droga, armi da fuoco, refurtiva di valore) le prove vanno segnalate subito e consegnate al <b>C.I.D.</b>, che ne cura gestione e custodia.</p>
+    <div class="box vietato"><b class="e">VIETATO</b><p>Trattenere o manomettere reperti.</p></div>
+  </article>
+
+  <article class="art" id="art-7-2" data-t="Rilascio PDA">
+    <h3><span class="ref">ART. 7.2</span>Rilascio del PDA (porto d'armi)</h3>
+    <p>Il PDA è l'autorizzazione legale a portare con sé armi da fuoco per difesa personale, rilasciata dopo le verifiche su requisiti e idoneità. Costo: <b>$10.000</b>.</p>
+    <h4>Requisiti minimi</h4>
+    <ul><li>Aver superato la maggiore età.</li><li>Fedina penale pulita.</li><li>Visita medica certificata.</li><li>Certificato balistico.</li></ul>
+    <h4>Procedura</h4>
+    <ol><li>Rilasciare il documento cartaceo.</li><li>Segnare il rilascio sull'MDT di servizio, nelle note del cittadino.</li></ol>
+    <div class="modulo"><div class="mh"><b>Nota da scrivere sull'MDT</b><button class="copia" type="button">Copia</button></div><pre>In data odierna (inserire data) si rilascia il PDA con validità di un mese, con scadenza fissata al (inserire data), fatta salva l'eventuale revoca anticipata nei casi previsti dalla normativa vigente.</pre></div>
+  </article>
+
+  <article class="art" id="art-7-3" data-t="Reati e pene">
+    <h3><span class="ref">ART. 7.3</span>Classificazione dei reati, sanzioni e pene</h3>
+    <p>La classificazione distingue i reati in base alla gravità e alle conseguenze: si consultano tutti nel codice penale e civile di Los Santos.</p>
+    <ul>
+      <li>Le sanzioni le stabiliscono gli agenti coinvolti nell'arresto.</li>
+      <li>Se i sospettati collaborano si possono dare <b>sconti di pena detentiva</b> al carcere di Bolingbroke.</li>
+      <li>Se un legale chiede uno sconto di pena detentiva e pecuniaria, si consulta un <b>sottufficiale in su</b>.</li>
+    </ul>
+  </article>
+
+  <article class="art" id="art-7-4" data-t="Bodycam come prova">
+    <h3><span class="ref">ART. 7.4</span>Bodycam e prove nell'arresto</h3>
+    <p>La bodycam o le prove che immortalano il sospettato durante il reato sono la conferma effettiva per arrestarlo (vedi <a href="#art-4-9">art. 4.9</a>).</p>
+    <div class="box obbligo"><b class="e">OBBLIGO</b><p>Le prove video restano disponibili per un massimo di 48 ore dall'arresto. Se non lo sono, per motivi non congrui al dipartimento, si incorre in sanzioni disciplinari gravi.</p></div>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO VIII ═════════ -->
+<section class="capitolo" id="cap-8" data-r="VIII" data-t="Reparti speciali">
+  <div class="cap-testa"><span class="num">VIII</span><div><small>Capitolo ottavo</small><h2>Reparti speciali</h2></div></div>
+
+  <article class="art" id="art-8-1" data-t="S.W.A.T.">
+    <h3><span class="ref">ART. 8.1</span>S.W.A.T. · Special Weapons and Tactics</h3>
+    <p>Il reparto S.W.A.T. è responsabile delle operazioni ad alto rischio: arresti di soggetti pericolosi, irruzioni in edifici con ostaggi, rapine e interventi su minacce gravi.</p>
+<figure class="foto-art"><img src="immagini/foto/mini/swat-gilet.jpg" alt="Operatori S.W.A.T. in tenuta tattica" loading="lazy" data-grande="immagini/foto/swat-gilet.jpg"><figcaption>Operatori S.W.A.T. in tenuta tattica</figcaption></figure>
+    <div class="box nota"><b class="e">NOTA</b><p>Si può partecipare al bando S.W.A.T. dal grado di <b>Agente II</b>.</p></div>
+    <ol class="scala-reparto">
+      <li><b>Comandante S.W.A.T.</b><span>Massima autorità del reparto: pianificazione strategica, logistica, supervisione di tutte le operazioni, gestione delle nuove leve e conferma delle promozioni interne.</span></li>
+      <li><b>Direttore S.W.A.T.</b><span>Secondo in comando: decisioni operative e strategiche, leadership in assenza del Comandante, gestione del roster, approvazione delle promozioni e pianificazione delle tattiche.</span></li>
+      <li><b>Supervisore S.W.A.T.</b><span>Logistica delle missioni, supervisione degli operatori e dei protocolli, valutazione delle missioni ad alto rischio, formazione pratica avanzata e approvazione delle promozioni.</span></li>
+      <li><b>Istruttore S.W.A.T.</b><span>Seleziona, allena e aggiorna nuove leve e operatori: addestramento tattico, uso delle armi e simulazioni.</span></li>
+      <li><b>Operatore Scelto S.W.A.T.</b><span>Operatore esperto riconosciuto per anzianità con encomi, punto di riferimento nelle missioni complesse.</span></li>
+      <li><b>Operatore S.W.A.T.</b><span>Operatore ufficiale del reparto: partecipa a tutte le operazioni e segue le direttive dei superiori.</span></li>
+      <li><b>Operatore in prova S.W.A.T.</b><span>Nuovo membro, in prova per due settimane tra corsi, test pratici e valutazioni continue.</span></li>
+    </ol>
+  </article>
+
+  <article class="art" id="art-8-2" data-t="C.I.D.">
+    <h3><span class="ref">ART. 8.2</span>C.I.D. · Criminal Investigation Division</h3>
+    <figure class="foto-art destra verticale"><img src="immagini/foto/mini/sorveglianza.jpg" alt="Attività di osservazione" loading="lazy" data-grande="immagini/foto/sorveglianza.jpg"><figcaption>Attività di osservazione</figcaption></figure>
+    <p>Il C.I.D. indaga sui crimini complessi e gravi: omicidi, rapine, frodi, traffico di droga e altre attività criminali organizzate, con analisi delle prove e strategie operative mirate.</p>
+    <ol class="scala-reparto">
+      <li><b>Detective Senior</b><span>Capo reparto: supervisiona tutte le indagini, pianifica i casi, valuta le prove più complesse, assegna i compiti, coordina con altre agenzie e cura la formazione.</span></li>
+      <li><b>Detective III</b><span>Investigatore avanzato: gestisce in autonomia casi di media complessità, coordina Detective II e I, conduce interrogatori complessi.</span></li>
+      <li><b>Detective II</b><span>Investigatore intermedio: raccoglie prove, segue sospetti e coordina alcune fasi operative sotto supervisione.</span></li>
+      <li><b>Detective I</b><span>Investigatore junior: assiste i colleghi più esperti, raccoglie informazioni preliminari e documenta le prove.</span></li>
+    </ol>
+  </article>
+</section>
+
+<!-- ═════════ CAPITOLO IX ═════════ -->
+<section class="capitolo" id="cap-9" data-r="IX" data-t="DEFCON">
+  <div class="cap-testa"><span class="num">IX</span><div><small>Capitolo nono</small><h2>DEFCON · Livelli di allerta</h2></div></div>
+
+  <article class="art" id="art-9-1" data-t="Livelli DEFCON">
+    <h3><span class="ref">ART. 9.1</span>I livelli DEFCON</h3>
+    <p>Il DEFCON regola lo stato di operatività delle forze dell'ordine in base al livello di minaccia in città. Va dal <b>DEFCON 5</b> (normalità) al <b>DEFCON 1</b> (stato di guerra). Ogni grado stabilisce armi, equipaggiamento, veicoli e numero minimo di operatori per pattuglia. Tocca un livello per vederlo.</p>
+    <div class="defcon-livelli" id="defcon-livelli"></div>
+    <div class="defcon-dettaglio" id="defcon-dettaglio"></div>
+  </article>
+</section>
+
+      <div class="vuoto" id="vuoto">Nessun articolo contiene questa parola. Prova con un termine più breve.</div>
+    </div>
+  </div>
+  <button class="indice-btn" id="indice-btn" type="button" aria-controls="indice" aria-expanded="false">☰ Indice</button>
+</section>
+
+<!-- ═════════════════════════ STRUMENTI ═════════════════════════ -->
+<section class="vista" id="v-strumenti" data-vista="strumenti" aria-label="Strumenti" hidden>
+  <div class="wrap">
+    <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/agente-garage.jpg')">
+      <div><small>Consultazione rapida</small><h1>Strumenti <span>operativi</span></h1><p>Quello che serve durante il turno, senza cercare nel manuale: codici radio, checklist degli interventi, carriera e domande frequenti.</p></div>
+    </div>
+    <div class="schede" role="tablist" aria-label="Strumenti">
+      <button type="button" role="tab" data-s="radio" aria-selected="true">Codici radio</button>
+      <button type="button" role="tab" data-s="prontuario" aria-selected="false">Prontuario</button>
+      <button type="button" role="tab" data-s="carriera" aria-selected="false">Carriera</button>
+      <button type="button" role="tab" data-s="faq" aria-selected="false">Domande frequenti</button>
+    </div>
+
+    <div class="pannello-s" id="s-radio" role="tabpanel">
+      <div class="due">
+        <div class="riquadro">
+          <h3 class="r-tit">TEN codes <small>Cerca e filtra</small></h3>
+          <div class="radio-ctl" role="group" aria-label="Filtra i codici radio">
+            <input type="search" placeholder="Cerca un codice o un significato" aria-label="Cerca codice radio">
+            <button class="filtro" type="button" data-f="tutti" aria-pressed="true">Tutti</button>
+            <button class="filtro" type="button" data-f="stato" aria-pressed="false">Stato</button>
+            <button class="filtro" type="button" data-f="intervento" aria-pressed="false">Intervento</button>
+            <button class="filtro" type="button" data-f="emergenza" aria-pressed="false">Emergenza</button>
+          </div>
+          <div class="tab"><table><thead><tr><th>Codice</th><th>Significato</th><th>Tipo</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="riquadro flash" id="flash">
+          <h3 class="r-tit">Allenamento <small>Indovina il significato, poi gira la carta</small></h3>
+          <button class="flash-carta" id="flash-carta" type="button" aria-live="polite">
+            <span class="fronte"><small>Codice</small><b id="fc-cod">10-4</b><em>Tocca per girare</em></span>
+            <span class="retro"><small>Significato</small><b id="fc-sig">Ricevuto</b><em id="fc-tipo"></em></span>
+          </button>
+          <div class="flash-azioni"><button type="button" class="btn" data-fa="no">✗ Non lo sapevo</button><button type="button" class="btn p" data-fa="si">✓ Lo sapevo</button></div>
+          <div class="flash-stat" id="flash-stat"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pannello-s" id="s-prontuario" role="tabpanel" hidden>
+      <p class="intro-s">Spunta i passi mentre li fai. Ogni scheda rimanda all'articolo completo del manuale.</p>
+      <div class="griglia-p" id="prontuario"></div>
+    </div>
+
+    <div class="pannello-s" id="s-carriera" role="tabpanel" hidden>
+      <p class="intro-s">Il percorso di un agente LSPD grado per grado, secondo gli articoli 1.5, 6.1 e 6.2 del manuale.</p>
+      <ol class="carriera" id="carriera"></ol>
+    </div>
+
+    <div class="pannello-s" id="s-faq" role="tabpanel" hidden>
+      <div class="faq" id="faq"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ BANDI ═════════════════════════ -->
+<section class="vista" id="v-bandi" data-vista="bandi" aria-label="Bandi" hidden>
+  <div class="wrap">
+    <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/squadra-pausa.jpg')">
+      <div><small>Reclutamento</small><h1>Bandi e <span>candidature</span></h1><p>I bandi dell'LSPD si pubblicano solo qui. Le candidature si inviano dal sito e arrivano direttamente al Comando; l'esito compare qui, nella pagina Bandi.</p></div>
+    </div>
+    <ol class="percorso rivela">
+      <li><b>1</b><span>Leggi il bando</span><small>Requisiti e scadenze</small></li>
+      <li><b>2</b><span>Studia il manuale</span><small>Le verifiche di capitolo aiutano</small></li>
+      <li><b>3</b><span>Candidatura online</span><small>Arriva subito al Comando</small></li>
+      <li><b>4</b><span>Colloquio H.R.</span><small>Con le Risorse Umane</small></li>
+      <li><b>5</b><span>Accademia</span><small>Da Recluta ad Agente I</small></li>
+    </ol>
+    <div class="esiti-cand" id="esiti-cand" hidden></div>
+    <div class="bandi-lista" id="bandi-lista"></div>
+    <div class="candidatura" id="candidatura" hidden></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ ESAMI ═════════════════════════ -->
+<section class="vista" id="v-esami" data-vista="esami" aria-label="Esami" hidden>
+  <div class="wrap">
+    <div id="esami-centro">
+      <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/agente-figura.jpg')">
+        <div><small>Accademia LSPD</small><h1>Centro <span>esami</span></h1><p>Ogni verifica pesca le domande a caso e mescola le risposte. Hai un tempo limite, le risposte giuste si vedono solo alla consegna e le uscite dalla pagina vengono registrate, come in un esame vero.</p></div>
+      </div>
+      <div class="candidato rivela" id="candidato"></div>
+      <div class="finale-card rivela" id="finale-card"></div>
+      <div class="sez-testa"><small>Una per capitolo</small><h2>Verifiche di capitolo</h2><span class="sez-dx" id="cap-superati"></span></div>
+      <div class="esami-griglia" id="esami-griglia"></div>
+    </div>
+    <div id="esami-prova" hidden></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ AREA COMANDO ═════════════════════════ -->
+<section class="vista" id="v-comando" data-vista="comando" aria-label="Area Comando" hidden>
+  <div class="wrap"><div id="cmd"></div></div>
+</section>
+
+<!-- ═════════════════════════ SEZIONE RISERVATA ═════════════════════════ -->
+<section class="vista" id="v-bloccato" data-vista="bloccato" aria-label="Sezione riservata" hidden>
+  <div class="wrap"><div id="bloccato"></div></div>
+</section>
+
+</main>
+
+<!-- foto a tutto schermo -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Foto"><button class="lb-x" type="button" data-lb="chiudi" aria-label="Chiudi">✕</button><button class="lb-nav prec" type="button" data-lb="prec" aria-label="Foto precedente">‹</button><figure><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption></figure><button class="lb-nav succ" type="button" data-lb="succ" aria-label="Foto successiva">›</button></div>
+
+<!-- porta d'ingresso: accesso con Discord -->
+<div class="porta" id="porta" hidden role="dialog" aria-modal="true" aria-label="Accesso al sito"><div class="porta-sfondo" aria-hidden="true"><i class="lb"></i><i class="lr"></i></div><div class="porta-box" id="porta-box"></div></div>
+
+<footer>
+  <div class="in">
+    <span class="emblema f-emblema"><img src="immagini/logo.png" alt="" onerror="this.remove()"><svg viewBox="0 0 150 170"><use href="#stemma"/></svg></span>
+    <div><b>Los Santos Police Department · NOW V4</b>Manuale operativo LSPD · aggiornato al 14/11/2026</div>
+    <nav class="f-link"><a href="#regolamento">Manuale</a><a href="#strumenti">Strumenti</a><a href="#bandi">Bandi</a><a href="#esami">Esami</a></nav>
+    <span class="f-rev">To protect and to serve</span>
+  </div>
+</footer>
+<a class="su" href="#top" aria-label="Torna in alto" id="su">↑</a>
+
+<dialog class="dialogo" id="dialogo"><form method="dialog"><h3 id="dg-t"></h3><p id="dg-p"></p><div class="dg-az"><button class="btn" value="no" id="dg-no">Annulla</button><button class="btn p" value="si" id="dg-si">Conferma</button></div></form></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas id="coriandoli" aria-hidden="true"></canvas>
+<div id="stampa"></div>
+
+<script src="script/impostazioni.js"></script>
+<script src="script/bandi.js"></script>
+<script src="script/esami.js"></script>
+<script src="script/sito.js"></script>
+</body>
+</html>
