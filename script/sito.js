@@ -161,7 +161,7 @@
       const card = $(`.cap-a[data-cap="${cap.id}"]`);
       if (card) {
         const ev = esiti()[cap.id], st = $('.stato', card);
-        $('.n-art', card).textContent = `${a.length} articoli`;
+        $('.n-art', card).textContent = `${a.length} ${a.length === 1 ? 'articolo' : 'articoli'}`;
         $('.barretta i', card).style.width = (n / a.length * 100) + '%';
         st.textContent = n === a.length ? '✓ letto' + (ev ? ` · verifica ${ev.best}%` : '') : n ? `${n}/${a.length} letti` : (ev ? `verifica ${ev.best}%` : 'da leggere');
         st.classList.toggle('ok', n === a.length);
@@ -444,11 +444,11 @@
     ['Arresto', 'var(--blu)', 'art-4-6', ['Identificare con il documento cartaceo (impronta solo se manca)', 'Leggere il Miranda Warning prima dell\'entrata in centrale', 'Foto segnaletica con nome e cognome nell\'applicativo', 'Trasferimento al carcere di Bolingbroke', 'Inserire tempo di pena e reati (max $25.000 · 8 mesi)', 'Bodycam conservata per 48 ore', 'Compilare il rapporto secondo il template']],
     ['Fermo stradale · 10-55', 'var(--giallo)', 'art-4-2', ['Comunicare il 10-55 in radio', 'Fermare il veicolo in modo sicuro', 'Identificare conducente e passeggeri con il documento', 'Verificare documenti e precedenti con la centrale o l\'MDT', 'Arma con la sicura inserita, mai estratta senza motivo']],
     ['Inseguimento · 10-80', '#a78bfa', 'art-6-5', ['Comunicare 10-80, posizione e velocità al coordinatore', 'Tre ALT, uno al minuto, per tre minuti', 'PIT solo fuori città, solo su auto e dopo danni del sospetto', 'Aspettare la conferma del coordinatore o del superiore', 'Rispettare 160 km/h in autostrada e 100 km/h in extraurbana']],
-    ['Rapina e ostaggi · 10-99', 'var(--rosso)', 'art-4-8', ['Bloccare ogni via di fuga', 'Comunicare la contrattazione al superiore più alto in grado', 'Banche e Vangelico: priorità S.W.A.T., agire su suo coordinamento', 'Con ostaggi: negoziare proteggendone l\'incolumità', 'Senza ostaggi: intimare la resa, poi irruzione']],
+    ['Rapina e ostaggi · 10-99', 'var(--rosso)', 'art-4-11', ['Bloccare ogni via di fuga', 'Comunicare la contrattazione al superiore più alto in grado', 'Banche e Vangelico: priorità S.W.A.T., agire su suo coordinamento', 'Con ostaggi: negoziare proteggendone l\'incolumità', 'Senza ostaggi: intimare la resa, poi irruzione']],
     ['Perquisizione', 'var(--arancio)', 'art-4-7', ['Forte presunzione di armi, munizioni, droga, esplosivi o soggetto mascherato', 'Dal DEFCON 3 in su: perquisizione consentita quando necessaria', 'In caso positivo: sequestro temporaneo', 'Far convalidare il sequestro dal procuratore con un mandato', 'Grandi quantità di droga o armi: consegna al C.I.D.']],
-    ['Minaccia sul campo', '#ff6b6b', 'art-4-1', ['Riconoscere la situazione di pericolo', 'Chiamare supporto', 'Mettere in sicurezza l\'area', 'Valutare il rischio', 'Agire con forza proporzionata · mai sparare per primi']],
+    ['Minaccia sul campo', '#ff6b6b', 'art-4-4', ['Riconoscere la situazione di pericolo', 'Chiamare supporto', 'Mettere in sicurezza l\'area', 'Valutare il rischio', 'Agire con forza proporzionata · mai sparare per primi']],
     ['Panic button', '#ff3b3b', 'art-3-3', ['Solo in emergenza reale (pericolo di vita o radio inutilizzabile)', 'Parte la segnalazione a tutte le unità con la tua posizione', 'Ristabilire la sicurezza', 'Relazionare l\'accaduto']],
-    ['Rilascio PDA', 'var(--verde)', 'art-7-2', ['Maggiore età e fedina penale pulita', 'Visita medica certificata e certificato balistico', 'Incassare $10.000', 'Rilasciare il documento cartaceo', 'Scrivere la nota di rilascio sull\'MDT (validità 1 mese)']],
+    ['Rilascio PDA', 'var(--verde)', 'art-7-4', ['Maggiore età e fedina penale pulita', 'Visita medica certificata e certificato balistico', 'Incassare $10.000', 'Rilasciare il documento cartaceo', 'Scrivere la nota di rilascio sull\'MDT (validità 1 mese)']],
     ['Inizio e fine servizio', '#22d3ee', 'art-2-3', ['10-8: entrata in servizio', 'Status 1 e 10-50: pattugliamento', 'Bodycam efficiente e operativa', 'Recluta: solo affiancata da un Agente I o superiore', '10-44 rientro in centrale, poi 10-7 fuori servizio']],
   ];
   $('#prontuario').innerHTML = PRONTUARIO.map(([t, c, a, p], i) => `<article class="pron rivela" style="--c:${c}" data-p="${i}"><div class="pron-t"><h3>${esc(t)}</h3><span class="pron-n">0/${p.length}</span></div><ol>${p.map(x => `<li><label><input type="checkbox"><span>${esc(x)}</span></label></li>`).join('')}</ol><div class="pron-p"><a href="#${a}">Leggi l'articolo →</a><button type="button" class="azzera">Azzera</button></div></article>`).join('');
@@ -466,16 +466,16 @@
   /* ── domande frequenti ── */
   const FAQ = [
     ['Come si entra nell\'LSPD?', 'Si risponde a un <a href="#bandi">bando di reclutamento</a> aperto con la candidatura online. Dopo il colloquio con le Risorse Umane si entra in Accademia come Recluta (<a href="#art-6-1">art. 6.1</a>).'],
-    ['Cosa serve per passare da Recluta ad Agente I?', '4 rapporti di pattuglia, 2 lezioni teoriche e 1 pratica, e almeno 5 giorni di servizio attivo (<a href="#art-6-1">art. 6.1</a>).'],
+    ['Cosa serve per passare da Recluta ad Agente I?', 'Cinque rapporti di arresto convalidati, le tre lezioni obbligatorie (due teoriche e una pratica) con i bollini verdi dell\'H.R. e almeno cinque giorni di servizio attivo. Poi esame pratico e teorico (<a href="#art-6-1">art. 6.1</a>). Calendario e percorso in <a href="#accademia">Accademia</a>.'],
     ['Ogni quanto si può essere promossi?', 'Le revisioni per anzianità si fanno ogni 14 giorni dall\'ultima promozione, se le valutazioni sono positive (<a href="#art-1-5">art. 1.5</a>). Guarda la <a href="#strumenti-carriera">carriera completa</a>.'],
     ['Devo assentarmi qualche giorno.', 'Avvisa nella sezione «Ferie»: oltre tre giorni di assenza senza avviso si rischiano sanzioni (<a href="#art-2-3">art. 2.3</a>).'],
-    ['Quando posso sparare?', 'Mai per primo. Solo con pericolo di vita per te o i civili, nei blitz autorizzati o alle ruote per fermare una fuga in veicolo (<a href="#art-4-4">art. 4.4</a>).'],
+    ['Quando posso sparare?', 'Mai per primo. Solo con pericolo di vita per te o i civili, nei blitz autorizzati o alle ruote per fermare una fuga in veicolo (<a href="#art-4-5">art. 4.5</a>).'],
     ['Posso usare la mia arma personale?', 'No: solo l\'arma d\'ordinanza dell\'armeria LSPD. Se si guasta, avvisa subito i sottufficiali (<a href="#art-3-2">art. 3.2</a>).'],
-    ['La mia bodycam non funziona.', 'Senza bodycam efficiente rischi sanzioni gravi: le prove servono per arresti leciti e vanno conservate 48 ore (<a href="#art-4-9">art. 4.9</a>).'],
-    ['Posso usare una maschera in servizio?', 'Solo se fai parte di C.I.D. o S.W.A.T., salvo eccezioni autorizzate (<a href="#art-4-10">art. 4.10</a>).'],
+    ['La mia bodycam non funziona.', 'Senza bodycam efficiente rischi sanzioni gravi: le prove servono per arresti leciti e vanno conservate 48 ore (<a href="#art-4-12">art. 4.12</a>).'],
+    ['Posso usare una maschera in servizio?', 'Solo se fai parte di C.I.D. o S.W.A.T., salvo eccezioni autorizzate (<a href="#art-4-13">art. 4.13</a>).'],
     ['Come segnalo un collega?', 'Con un ticket alle Risorse Umane: dati, data e ora, bodycam e descrizione. Mai farsi giustizieri (<a href="#art-2-7">art. 2.7</a>).'],
-    ['Da che grado posso entrare nella S.W.A.T.?', 'Dal grado di Agente II puoi partecipare al bando S.W.A.T. (<a href="#art-8-1">art. 8.1</a>).'],
-    ['Cosa cambia con il DEFCON?', 'Ogni livello decide armi, veicoli e operatori minimi per pattuglia. Il livello attuale lo vedi in home e in alto a destra (<a href="#art-9-1">art. 9.1</a>).'],
+    ['Da che grado posso entrare nella S.W.A.T.?', 'Dal grado di Agente II puoi partecipare al bando S.W.A.T. (<a href="#art-10-1">art. 10.1</a>).'],
+    ['Cosa cambia con il DEFCON?', 'Ogni livello decide armi, veicoli e operatori minimi per pattuglia. Il livello attuale lo vedi in home e in alto a destra (<a href="#art-10-1">art. 10.1</a>).'],
     ['I miei progressi restano salvati?', 'Articoli letti ed esiti restano nel browser di questo dispositivo. Le candidature e gli esiti ufficiali stanno nell\'archivio del Comando.'],
   ];
   $('#faq').innerHTML = FAQ.map(([d, r]) => `<details class="rivela"><summary>${d}</summary><div class="r"><p>${r}</p></div></details>`).join('');
@@ -1813,7 +1813,7 @@
     const box = $('#defcon-box');
     if (box) box.innerHTML = `<div class="dc-testa"><small>Stato della città</small><span class="dc-agg">${DC.aggiornato ? `aggiornato ${quandoBreve(DC.aggiornato)}${DC.da ? ' da ' + esc(DC.da) : ''}` : 'livello ordinario'}</span></div>
       <div class="dc-corpo" style="--dc:${d.col}"><div class="dc-num"><span class="dc-anello"></span><b>${l}</b><small>DEFCON</small></div><div class="dc-info"><b class="dc-nome">${esc(d.nome)}</b><span class="dc-all">${esc(d.allarme)} · operatori per pattuglia: ${esc(d.min)}</span><ul>${d.punti.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
-      ${ACC.stato === 'comandante' ? `<div class="dc-comando"><small>Cambia il livello · solo Comando</small><div>${[5, 4, 3, 2, 1].map(n => `<button type="button" data-dcset="${n}" style="--dc:${DEFCON[n].col}" aria-pressed="${n === l}" title="${esc(DEFCON[n].nome)}">${n}</button>`).join('')}</div></div>` : '<a class="dc-link" href="#art-9-1">Cosa cambia con ogni livello →</a>'}`;
+      ${ACC.stato === 'comandante' ? `<div class="dc-comando"><small>Cambia il livello · solo Comando</small><div>${[5, 4, 3, 2, 1].map(n => `<button type="button" data-dcset="${n}" style="--dc:${DEFCON[n].col}" aria-pressed="${n === l}" title="${esc(DEFCON[n].nome)}">${n}</button>`).join('')}</div></div>` : '<a class="dc-link" href="#art-10-1">Cosa cambia con ogni livello →</a>'}`;
     const liv = $('#defcon-livelli');
     if (liv) {
       const sel = DC.scelto || l, dd = DEFCON[sel];

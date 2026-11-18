@@ -52,9 +52,9 @@ window.GU_BANDI = [
     esameRichiesto: false,
     descrizione: "Selezione interna per entrare nel reparto S.W.A.T., responsabile delle operazioni ad alto rischio. I selezionati iniziano come Operatori in prova per due settimane.",
     requisiti: [
-      'Grado di Agente II o superiore (art. 8.1)',
+      'Grado di Agente II o superiore (art. 9.1)',
       'Nessuna sanzione disciplinare attiva',
-      'Buona conoscenza delle procedure di rapina e ostaggi (art. 4.8)'
+      'Buona conoscenza delle procedure di rapina e ostaggi (art. 4.11)'
     ],
     preferenziali: ['Esperienza negli interventi a rischio alto', 'Valutazioni positive dei superiori'],
     fasi: [
