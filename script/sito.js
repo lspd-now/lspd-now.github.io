@@ -1307,7 +1307,7 @@
       const M = membriRep(id), ruoli = ruoliRep(id);
       return `<p class="intro-s">Aggiungi chi entra nel reparto e assegna il ruolo: compare subito nella gerarchia interna. Per le reclute in corso puoi segnare inizio e valutazione: ogni recluta vede solo la sua.</p>
         <form class="rep-add riquadro" id="rep-add" novalidate>
-          <label class="campo"><span>ID Discord <em>*</em></span><input name="did" inputmode="numeric" maxlength="20" placeholder="es. 311960318383489025"></label>
+          <label class="campo"><span>ID Discord <em>*</em></span><input name="did" inputmode="numeric" maxlength="20" placeholder="es. 123456789012345678"></label>
           <label class="campo"><span>Nome del personaggio <em>*</em></span><input name="nome" maxlength="60" placeholder="es. Marco Rossi"></label>
           <label class="campo"><span>Ruolo <em>*</em></span>${ruoli.length ? `<select name="ruolo">${[...ruoli].reverse().map(r => `<option>${esc(r)}</option>`).join('')}</select>` : '<input name="ruolo" maxlength="40" placeholder="es. Operatore MARY">'}</label>
           <button class="btn p" type="submit">＋ Aggiungi al reparto</button>
