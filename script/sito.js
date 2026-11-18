@@ -273,7 +273,7 @@
   }
 
   /* ═════════════ VISTE E NAVIGAZIONE ═════════════ */
-  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), accademia: $('#v-accademia'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
+  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), accademia: $('#v-accademia'), reparti: $('#v-reparti'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
   let vista = null;
   function risolvi(h) {
     if (!h || h === 'top' || h === 'home') return { v: 'home' };
@@ -288,6 +288,8 @@
     if (h === 'attestato') return { v: 'esami', attestato: true };
     if (h === 'comando') return { v: 'comando' };
     if (h === 'accademia') return { v: 'accademia' };
+    if (h === 'reparti') return { v: 'reparti' };
+    if (h.startsWith('reparto-')) return { v: 'reparti', rep: h.slice(8) };
     if (h.startsWith('esame-')) return { v: 'esami', esame: h.slice(6) };
     return { v: 'home' };
   }
@@ -332,6 +334,7 @@
     if (r.v === 'home') aggiornaBandiHome();
     if (r.v === 'comando') areaComando();
     if (r.v === 'accademia') accademia();
+    if (r.v === 'reparti') reparti(r.rep);
     if (!scorso && cambia) scrollTo({ top: 0, ...SALTA });
     rivela(); scorri();
   }
@@ -1143,11 +1146,13 @@
     if (d.value && new Date(d.value) > new Date()) { toast('La data di assunzione non può essere nel futuro', 'ko'); d.value = libDati().assunto; return; }
     const L = { ...libDati(), assunto: d.value }; LIB.dati = L; LIB.sporco = true; LS.set('lspd-libretto-bozza', L); ridisegnaLib();
   });
-  /* ── comunicazioni dell'Accademia: le scrive il Comando ── */
+  /* ── comunicazioni: Accademia (le scrive il Comando) e reparti (Comando e responsabile del reparto) ── */
   let COM = [];
   const COM_VISTO = () => LS.get('lspd-com-visto', 0);
+  const REP_VISTO = () => LS.get('lspd-repcom-visto', 0);
+  const sezCom = c => c.sezione || 'accademia';
   async function caricaComunicazioni() {
-    try { const sb = await db(); const { data, error } = await sb.from(T('comunicazioni')).select('*').order('fissata', { ascending: false }).order('creato', { ascending: false }).limit(60); COM = error || !Array.isArray(data) ? [] : data; } catch { COM = []; }
+    try { const sb = await db(); const { data, error } = await sb.from(T('comunicazioni')).select('*').order('fissata', { ascending: false }).order('creato', { ascending: false }).limit(120); COM = error || !Array.isArray(data) ? [] : data; } catch { COM = []; }
     COM.sort((a, b) => (b.fissata === true) - (a.fissata === true) || new Date(b.creato) - new Date(a.creato));
   }
   // testo incollato da Discord: **grassetto**, __sottolineato__, *corsivo*, # titoli, elenchi e citazioni
@@ -1167,17 +1172,17 @@
     if (lista) out.push('</ul>');
     return out.join('');
   }
-  function blocchiCom() {
-    const cmd = ACC.stato === 'comandante', visto = COM_VISTO();
-    const form = cmd ? `<details class="com-nuova" id="com-box"><summary>＋ Nuova comunicazione</summary>
-      <form id="com-form" class="com-form" novalidate>
-        <label class="campo largo"><span>Titolo <em>*</em></span><input name="titolo" maxlength="120" required placeholder="es. 📚 Calendario lezioni della settimana"></label>
+  function blocchiCom(sez = 'accademia') {
+    const cmd = puoScrivereCom(sez), visto = sez === 'accademia' ? COM_VISTO() : REP_VISTO();
+    const form = cmd ? `<details class="com-nuova" id="com-box-${sez}"><summary>＋ Nuova comunicazione</summary>
+      <form id="com-form-${sez}" class="com-form" data-sez="${sez}" novalidate>
+        <label class="campo largo"><span>Titolo <em>*</em></span><input name="titolo" maxlength="120" required placeholder="${sez === 'accademia' ? 'es. 📚 Calendario lezioni della settimana' : 'es. 🚓 Addestramento di sabato'}"></label>
         <label class="campo largo"><span>Testo <em>*</em></span><textarea name="testo" rows="9" maxlength="6000" required placeholder="Puoi incollare il testo da Discord: **grassetto**, __sottolineato__, elenchi con * e citazioni con >. Le menzioni dei ruoli vengono tolte da sole."></textarea></label>
-        <label class="campo"><span>Firma</span><input name="firma" maxlength="120" value="${esc(LS.get('lspd-com-firma', ''))}" placeholder="es. Responsabile H.R. Team · Cpt. Rossi"></label>
+        <label class="campo"><span>Firma</span><input name="firma" maxlength="120" value="${esc(LS.get('lspd-com-firma-' + sez, LS.get('lspd-com-firma', '')))}" placeholder="es. Responsabile ${sez === 'accademia' ? 'H.R. Team' : sez.toUpperCase()} · Cpt. Rossi"></label>
         <label class="com-check"><input type="checkbox" name="fissata"> 📌 Metti in evidenza (resta in cima)</label>
         <div class="com-az"><button class="btn ghost" type="button" data-com-annulla>Annulla</button><button class="btn p" type="submit">📢 Pubblica</button></div>
       </form></details>` : '';
-    const lista = COM.map(c => { const nuova = new Date(c.creato) > new Date(visto || 0) && visto, lunga = (c.testo || '').length > 700; return `<article class="com${c.fissata ? ' fissa' : ''}${nuova ? ' nuova' : ''}" data-com="${esc(c.id)}">
+    const lista = COM.filter(c => sezCom(c) === sez).map(c => { const nuova = new Date(c.creato) > new Date(visto || 0) && visto, lunga = (c.testo || '').length > 700; return `<article class="com${c.fissata ? ' fissa' : ''}${nuova ? ' nuova' : ''}" data-com="${esc(c.id)}">
         <div class="com-testa"><span class="com-ico">${c.fissata ? '📌' : '📢'}</span><div><b>${esc(c.titolo)}</b><small>${quando(c.creato)}${c.autore ? ` · pubblicata da ${esc(c.autore)}` : ''}${c.modificato ? ` · modificata ${quando(c.modificato)}` : ''}</small></div>${nuova ? '<em class="com-new">Nuova</em>' : ''}</div>
         <div class="com-corpo${lunga ? ' lunga' : ''}">${discordMd(c.testo)}</div>${lunga ? '<button class="com-tutto" type="button" data-com-tutto>Leggi tutto ↓</button>' : ''}
         ${c.firma ? `<p class="com-firma">${esc(c.firma)}</p>` : ''}
@@ -1185,44 +1190,187 @@
       </article>`; }).join('');
     return form + (lista || '<p class="intro-s">Nessuna comunicazione per ora.</p>');
   }
-  const ridisegnaCom = () => { const el = $('#acc-com'); if (el) { el.innerHTML = blocchiCom(); rivela(el); } };
+  const ridisegnaCom = () => {
+    const a = $('#acc-com'); if (a) { a.innerHTML = blocchiCom('accademia'); rivela(a); }
+    const r = $('#rep-com'); if (r) { r.innerHTML = blocchiCom(REP.id); rivela(r); }
+  };
   function segnaComLette() {
-    const ultima = COM.reduce((m, c) => Math.max(m, +new Date(c.creato)), 0);
+    const ultima = COM.filter(c => sezCom(c) === 'accademia').reduce((m, c) => Math.max(m, +new Date(c.creato)), 0);
     if (!COM_VISTO()) LS.set('lspd-com-visto', ultima || Date.now());
     else setTimeout(() => { if (vista === 'accademia') LS.set('lspd-com-visto', Math.max(ultima, COM_VISTO())); }, 4000);
     const nb = $('#nav-acc'); if (nb) nb.hidden = true;
+  }
+  function segnaRepLette() {
+    const ultima = COM.filter(c => sezCom(c) !== 'accademia').reduce((m, c) => Math.max(m, +new Date(c.creato)), 0);
+    if (!REP_VISTO()) LS.set('lspd-repcom-visto', ultima || Date.now());
+    else setTimeout(() => { if (vista === 'reparti' && REP.scheda === 'comunicazioni') LS.set('lspd-repcom-visto', Math.max(ultima, REP_VISTO())); }, 4000);
+    const nb = $('#nav-rep'); if (nb) nb.hidden = true;
   }
   let comContate = false;
   async function contaComunicazioni() {
     if (comContate || !DB_ATTIVO || !['membro', 'comandante'].includes(ACC.stato)) return; comContate = true;
     try {
-      const sb = await db(); const { data } = await sb.from(T('comunicazioni')).select('creato').order('creato', { ascending: false }).limit(60);
-      const visto = COM_VISTO(), n = visto ? (data || []).filter(c => new Date(c.creato) > new Date(visto)).length : 0;
-      const nb = $('#nav-acc'); if (nb && n && vista !== 'accademia') { nb.hidden = false; nb.textContent = n; toast(n === 1 ? '📢 C\'è una nuova comunicazione in Accademia' : `📢 Ci sono ${n} nuove comunicazioni in Accademia`, 'ok'); }
+      const sb = await db(); const { data } = await sb.from(T('comunicazioni')).select('*').order('creato', { ascending: false }).limit(120);
+      const L = data || [], va = COM_VISTO(), vr = REP_VISTO();
+      const na = va ? L.filter(c => sezCom(c) === 'accademia' && new Date(c.creato) > new Date(va)).length : 0;
+      const nr = vr ? L.filter(c => sezCom(c) !== 'accademia' && new Date(c.creato) > new Date(vr)).length : 0;
+      const ba = $('#nav-acc'); if (ba && na && vista !== 'accademia') { ba.hidden = false; ba.textContent = na; }
+      const br = $('#nav-rep'); if (br && nr && vista !== 'reparti') { br.hidden = false; br.textContent = nr; }
+      if (na + nr) toast(na + nr === 1 ? `📢 C'è una nuova comunicazione ${na ? 'in Accademia' : 'nei Reparti'}` : `📢 Ci sono ${na + nr} nuove comunicazioni (Accademia ${na} · Reparti ${nr})`, 'ok');
     } catch {}
   }
   document.addEventListener('click', async e => {
     const tt = e.target.closest('[data-com-tutto]'); if (tt) { const c = tt.previousElementSibling; c.classList.toggle('aperta'); tt.textContent = c.classList.contains('aperta') ? 'Riduci ↑' : 'Leggi tutto ↓'; return; }
-    if (ACC.stato !== 'comandante') return;
-    if (e.target.closest('[data-com-annulla]')) { const f = $('#com-form'); f.reset(); delete f.dataset.id; $('#com-box').open = false; $('#com-box summary').textContent = '＋ Nuova comunicazione'; return; }
+    const an = e.target.closest('[data-com-annulla]');
+    if (an) { const box = an.closest('.com-nuova'), f = $('form', box); f.reset(); delete f.dataset.id; box.open = false; $('summary', box).textContent = '＋ Nuova comunicazione'; return; }
     const m = e.target.closest('[data-com-mod]');
-    if (m) { const c = COM.find(x => String(x.id) === m.dataset.comMod); if (!c) return; const f = $('#com-form'); f.dataset.id = c.id; f.titolo.value = c.titolo; f.testo.value = c.testo; f.firma.value = c.firma || ''; f.fissata.checked = !!c.fissata; $('#com-box').open = true; $('#com-box summary').textContent = '✏️ Modifica comunicazione'; $('#com-box').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (m) { const c = COM.find(x => String(x.id) === m.dataset.comMod); if (!c || !puoScrivereCom(sezCom(c))) return; const sz = sezCom(c), f = $('#com-form-' + sz), box = $('#com-box-' + sz); if (!f) return; f.dataset.id = c.id; f.titolo.value = c.titolo; f.testo.value = c.testo; f.firma.value = c.firma || ''; f.fissata.checked = !!c.fissata; box.open = true; $('summary', box).textContent = '✏️ Modifica comunicazione'; box.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     const p = e.target.closest('[data-com-pin]');
-    if (p) { const c = COM.find(x => String(x.id) === p.dataset.comPin); if (!c) return; const sb = await db(); const { error } = await sb.from(T('comunicazioni')).update({ fissata: !c.fissata }).eq('id', c.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaComunicazioni(); ridisegnaCom(); toast(c.fissata ? 'Tolta dall\'evidenza' : '📌 Messa in evidenza', 'ok'); return; }
+    if (p) { const c = COM.find(x => String(x.id) === p.dataset.comPin); if (!c || !puoScrivereCom(sezCom(c))) return; const sb = await db(); const { error } = await sb.from(T('comunicazioni')).update({ fissata: !c.fissata }).eq('id', c.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaComunicazioni(); ridisegnaCom(); toast(c.fissata ? 'Tolta dall\'evidenza' : '📌 Messa in evidenza', 'ok'); return; }
     const d = e.target.closest('[data-com-del]');
-    if (d) { const c = COM.find(x => String(x.id) === d.dataset.comDel); if (!c) return; if (!(await chiedi('Eliminare la comunicazione?', `«${c.titolo}» sparisce per tutti. Non si può annullare.`, 'Elimina', 'Annulla'))) return; const sb = await db(); const { error } = await sb.from(T('comunicazioni')).delete().eq('id', c.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaComunicazioni(); ridisegnaCom(); toast('Comunicazione eliminata', 'ok'); }
+    if (d) { const c = COM.find(x => String(x.id) === d.dataset.comDel); if (!c || !puoScrivereCom(sezCom(c))) return; if (!(await chiedi('Eliminare la comunicazione?', `«${c.titolo}» sparisce per tutti. Non si può annullare.`, 'Elimina', 'Annulla'))) return; const sb = await db(); const { error } = await sb.from(T('comunicazioni')).delete().eq('id', c.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaComunicazioni(); ridisegnaCom(); toast('Comunicazione eliminata', 'ok'); }
   });
   document.addEventListener('submit', async e => {
-    if (e.target.id !== 'com-form') return; e.preventDefault();
-    const f = e.target, g = k => String(f[k].value || '').trim();
+    if (!e.target.classList.contains('com-form')) return; e.preventDefault();
+    const f = e.target, sez = f.dataset.sez || 'accademia', g = k => String(f[k].value || '').trim();
+    if (!puoScrivereCom(sez)) return;
     if (!g('titolo') || !g('testo')) { toast('Scrivi titolo e testo', 'ko'); return; }
     const riga = { titolo: g('titolo'), testo: g('testo'), firma: g('firma') || null, fissata: f.fissata.checked };
-    LS.set('lspd-com-firma', g('firma'));
+    if (sez !== 'accademia') riga.sezione = sez;
+    LS.set('lspd-com-firma-' + sez, g('firma'));
     const sb = await db(); const q = f.dataset.id ? sb.from(T('comunicazioni')).update(riga).eq('id', f.dataset.id) : sb.from(T('comunicazioni')).insert(riga);
     const { error } = await q; if (error) { toast('Pubblicazione non riuscita: ' + error.message, 'ko'); return; }
-    toast(f.dataset.id ? 'Comunicazione aggiornata ✓' : '📢 Comunicazione pubblicata: la vedono tutti i membri', 'ok');
+    toast(f.dataset.id ? 'Comunicazione aggiornata ✓' : `📢 Comunicazione pubblicata: la vedono tutti i membri${sez === 'accademia' ? '' : ' nella sezione ' + sez.toUpperCase()}`, 'ok');
     await caricaComunicazioni(); ridisegnaCom(); if (!f.dataset.id) coriandoli();
   });
+
+  /* ═════════════ REPARTI · H.S.U. e MARY (solo membri: i testi stanno nell'archivio protetto) ═════════════ */
+  const REPARTI = { hsu: ['H.S.U.', '🚓', 'High Speed Unit', '#22d3ee'], mary: ['MARY', '🏍️', 'Unità motociclistica', '#ff9f43'] };
+  const REP = { id: 'hsu', scheda: 'comunicazioni', dati: {}, membri: [], corsi: [], miei: [], caricato: false, corso: null };
+  const puoScrivereCom = sez => ACC.stato === 'comandante' || (sez !== 'accademia' && REP.miei.includes(sez));
+  const gestisco = r => ACC.stato === 'comandante' || REP.miei.includes(r);
+  async function caricaReparti(forza) {
+    if (REP.caricato && !forza) return; REP.caricato = true;
+    const sb = await db(); if (!sb) return;
+    try {
+      const [d, m, c, mi] = await Promise.all([
+        sb.from(T('riservati')).select('id,dati'),
+        sb.from(T('reparto_membri')).select('*').order('aggiunto', { ascending: true }),
+        sb.from(T('reparto_corsi')).select('*'),
+        sb.rpc(T('miei_reparti')),
+      ]);
+      REP.dati = {}; for (const r of d.data || []) if (String(r.id).startsWith('reparto-')) REP.dati[r.id.slice(8)] = r.dati;
+      REP.membri = m.data || []; REP.corsi = c.data || []; REP.miei = Array.isArray(mi.data) ? mi.data : [];
+    } catch {}
+  }
+  async function reparti(id) {
+    const box = $('#reparti'); if (!box) return;
+    if (id && REPARTI[id]) REP.id = id;
+    if (!REP.caricato) box.innerHTML = '<p class="intro-s">Carico i reparti…</p>';
+    await Promise.all([caricaReparti(), COM.length ? null : caricaComunicazioni()]);
+    if (!Object.keys(REP.dati).length && !REP.membri.length) { box.innerHTML = `<div class="cmd-porta blocco"><div class="cmd-lucchetto">${LUCCHETTO}</div><small>Reparti riservati</small><h2>Contenuto non disponibile</h2><p>Le sezioni dei reparti si caricano solo per i membri verificati della LSPD. Accedi con Discord e riprova.</p></div>`; return; }
+    if (REP.scheda === 'gestione' && !gestisco(REP.id)) REP.scheda = 'comunicazioni';
+    renderReparto();
+  }
+  const membriRep = r => REP.membri.filter(m => m.reparto === r);
+  const ruoliRep = r => (REP.dati[r]?.gerarchia || []).map(x => x[0]);
+  function totCorso(D, c) { return (D?.corso?.aree || []).reduce((t, [k, , max]) => t + Math.min(max, Math.max(0, +(c?.punteggi?.[k] ?? 0) || 0)), 0); }
+  function giorniCorso(c) { return c?.inizio ? Math.max(0, Math.floor((Date.now() - new Date(c.inizio)) / 864e5)) : null; }
+  function renderReparto() {
+    const id = REP.id, [sig, emo, nome, col] = REPARTI[id], D = REP.dati[id] || {}, ges = gestisco(id);
+    const canali = [['comunicazioni', '📌', 'comunicazioni'], ['manuale', '📖', 'manuale operativo'], ['regolamento', '📖', 'regolamento'], ['gerarchia', '👮', 'gerarchia interna'], ...(ges ? [['gestione', '🛠️', 'gestione']] : []), ['addestramento', emo, 'addestramento']];
+    const nuove = COM.filter(c => sezCom(c) === id && REP_VISTO() && new Date(c.creato) > new Date(REP_VISTO())).length;
+    $('#reparti').innerHTML = `
+      <div class="rep-scelta">${Object.entries(REPARTI).map(([k, [s, e, n, c]]) => `<button type="button" class="rep-card${k === id ? ' on' : ''}" data-rep="${k}" style="--rc:${c}"><span class="rep-emo">${e}</span><span><b>${s}</b><small>${n} · ${membriRep(k).length} ${membriRep(k).length === 1 ? 'membro' : 'membri'}</small></span>${REP.miei.includes(k) && ACC.stato !== 'comandante' ? '<em>Responsabile</em>' : ''}</button>`).join('')}</div>
+      <div class="rep-corpo" style="--rc:${col}">
+        <nav class="rep-canali" aria-label="Canali ${esc(sig)}"><div class="rep-cat">${emo} ${esc(sig)}</div>${canali.map(([k, e, t]) => `<button type="button" data-rcan="${k}" class="${REP.scheda === k ? 'on' : ''}"><span class="hash">#</span>${e} ${esc(t)}${k === 'comunicazioni' && nuove ? `<i class="rep-n">${nuove}</i>` : ''}${k === 'gestione' ? ' 🔒' : ''}</button>`).join('')}</nav>
+        <div class="rep-vista">${D.missione ? `<p class="rep-missione">${esc(D.missione)}</p>` : ''}${schedaRep(id, D, ges)}</div>
+      </div>`;
+    rivela();
+    if (REP.scheda === 'comunicazioni') segnaRepLette();
+  }
+  const prossimamente = (cosa, sig) => `<div class="rep-vuoto"><span>📄</span><b>${esc(cosa)} ${esc(sig)} in arrivo</b><p>Sarà pubblicato qui appena il reparto lo consegna.</p></div>`;
+  function schedaRep(id, D, ges) {
+    const sig = REPARTI[id][0], S = REP.scheda;
+    if (S === 'comunicazioni') return `<div id="rep-com">${blocchiCom(id)}</div>`;
+    if (S === 'manuale') return D.manuale ? `<div class="rep-doc"><div class="rep-doc-t"><small>${esc(D.manuale.versione || '')}</small><h3>${esc(D.manuale.titolo)}</h3></div>${D.manuale.nota ? `<div class="box nota"><b class="e">NOTA</b><p>${esc(D.manuale.nota)}</p></div>` : ''}
+      <div class="rep-indice">${D.manuale.capitoli.map(([t], i) => `<a href="#" data-rvai="rm-${i}">${esc(t)}</a>`).join('')}</div>
+      ${D.manuale.capitoli.map(([t, x], i) => `<article class="rep-art rivela" id="rm-${i}"><h4>${esc(t)}</h4><div class="com-corpo">${discordMd(x)}</div></article>`).join('')}</div>` : prossimamente('Manuale operativo', sig);
+    if (S === 'regolamento') return D.regolamento ? `<div class="rep-doc"><div class="rep-doc-t"><small>LSPD · ${esc(sig)}</small><h3>${esc(D.regolamento.titolo)}</h3></div>${D.regolamento.articoli.map(([t, x]) => `<article class="rep-art rivela"><h4>${esc(t)}</h4><div class="com-corpo">${discordMd(x)}</div></article>`).join('')}</div>` : prossimamente('Regolamento', sig);
+    if (S === 'gerarchia') {
+      const M = membriRep(id), ruoli = ruoliRep(id), altri = [...new Set(M.map(m => m.ruolo).filter(r => !ruoli.includes(r)))];
+      const lista = [...(D.gerarchia || []), ...altri.map(r => [r, ''])];
+      if (!lista.length) return prossimamente('Gerarchia interna', sig);
+      return `<ol class="rep-gerarchia">${lista.map(([r, f], i) => { const chi = M.filter(m => m.ruolo === r); return `<li class="rivela"><span class="rg-n">${i + 1}</span><div><b>${esc(r)}</b>${f ? `<small>${esc(f)}</small>` : ''}<div class="rg-chi">${chi.map(m => `<a class="in-carica" href="https://discord.com/users/${esc(m.discord_id)}" target="_blank" rel="noopener"><img src="${esc(avatarBase(m.discord_id))}" alt="">${esc(m.nome)}</a>`).join('') || '<em>Nessuno al momento</em>'}</div></div></li>`; }).join('')}</ol>`;
+    }
+    if (S === 'gestione' && ges) {
+      const M = membriRep(id), ruoli = ruoliRep(id);
+      return `<p class="intro-s">Aggiungi chi entra nel reparto e assegna il ruolo: compare subito nella gerarchia interna. Per le reclute in corso puoi segnare inizio e valutazione: ogni recluta vede solo la sua.</p>
+        <form class="rep-add riquadro" id="rep-add" novalidate>
+          <label class="campo"><span>ID Discord <em>*</em></span><input name="did" inputmode="numeric" maxlength="20" placeholder="es. 311960318383489025"></label>
+          <label class="campo"><span>Nome del personaggio <em>*</em></span><input name="nome" maxlength="60" placeholder="es. Marco Rossi"></label>
+          <label class="campo"><span>Ruolo <em>*</em></span>${ruoli.length ? `<select name="ruolo">${[...ruoli].reverse().map(r => `<option>${esc(r)}</option>`).join('')}</select>` : '<input name="ruolo" maxlength="40" placeholder="es. Operatore MARY">'}</label>
+          <button class="btn p" type="submit">＋ Aggiungi al reparto</button>
+        </form>
+        <div class="rep-membri">${M.map(m => { const c = REP.corsi.find(x => x.reparto === id && x.discord_id === m.discord_id), tot = totCorso(D, c), gg = giorniCorso(c), recl = /recluta/i.test(m.ruolo); return `<article class="rep-m">
+          <div class="cmd-v-t"><img src="${esc(avatarBase(m.discord_id))}" alt=""><div><b>${esc(m.nome)}</b><small><a href="https://discord.com/users/${esc(m.discord_id)}" target="_blank" rel="noopener">profilo Discord</a>${m.aggiunto_da ? ` · aggiunto da ${esc(m.aggiunto_da)}` : ''}</small></div>
+            ${ruoli.length ? `<select data-rruolo="${esc(m.id)}">${[...ruoli].reverse().map(r => `<option${r === m.ruolo ? ' selected' : ''}>${esc(r)}</option>`).join('')}${ruoli.includes(m.ruolo) ? '' : `<option selected>${esc(m.ruolo)}</option>`}</select>` : `<span class="pill st" style="--sc:var(--rc)">${esc(m.ruolo)}</span>`}
+            <button class="btn piccolo ghost" type="button" data-rdel="${esc(m.id)}" title="Togli dal reparto">🗑</button></div>
+          ${recl || c ? `<details class="rep-corso-ed"${REP.corso === m.discord_id ? ' open' : ''}><summary>🎓 Corso ${c?.inizio ? `· giorno ${Math.min(gg + 1, D.corso?.durata || gg + 1)}/${D.corso?.durata || '—'}` : '· da iniziare'}${D.corso?.aree ? ` · ${tot}/100` : ''}</summary>
+            <form class="rep-corso-form" data-did="${esc(m.discord_id)}" novalidate>
+              <label class="campo"><span>Inizio del corso</span><input type="date" name="inizio" value="${esc(c?.inizio || '')}" max="${new Date().toISOString().slice(0, 10)}"></label>
+              ${(D.corso?.aree || []).map(([k, t, max]) => `<label class="campo"><span>${esc(t)} (max ${max})</span><input type="number" name="p-${k}" min="0" max="${max}" value="${esc(c?.punteggi?.[k] ?? '')}"></label>`).join('')}
+              <label class="campo largo"><span>Note dell'istruttore</span><input name="note" maxlength="500" value="${esc(c?.note || '')}" placeholder="Motivazione del punteggio"></label>
+              <div class="com-az">${D.corso?.soglia ? `<span class="rep-tot ${tot >= D.corso.soglia ? 'ok' : ''}">Totale ${tot}/100 · soglia ${D.corso.soglia}</span>` : ''}<button class="btn p" type="submit">Salva corso</button></div>
+              ${c?.aggiornato_da ? `<small class="lib-ctrl">Ultimo aggiornamento di ${esc(c.aggiornato_da)} · ${quando(c.aggiornato)}</small>` : ''}
+            </form></details>` : ''}
+        </article>`; }).join('') || '<p class="intro-s">Nessun membro nel reparto. Aggiungi il primo qui sopra.</p>'}</div>`;
+    }
+    if (S === 'addestramento') {
+      const C0 = D.corso, mio = REP.corsi.find(x => x.reparto === id && x.discord_id === ACC.utente?.id);
+      const mioB = mio ? (() => { const gg = giorniCorso(mio), tot = totCorso(D, mio), dur = C0?.durata; return `<div class="rep-mio rivela"><h4>🎓 Il mio corso</h4>
+        ${mio.inizio ? `<div class="rep-gg"><span>Iniziato il ${dataIt(new Date(mio.inizio))}</span><b>${dur ? `Giorno ${Math.min(gg + 1, dur)} di ${dur}` : `${gg} giorni`}</b></div>${dur ? `<div class="acc-barra"><span style="width:${Math.min(100, gg / dur * 100)}%"></span></div>` : ''}` : '<p class="intro-s">Il responsabile non ha ancora segnato l\'inizio del corso.</p>'}
+        ${(C0?.aree || []).some(([k]) => mio.punteggi?.[k] != null && mio.punteggi[k] !== '') ? `<div class="rep-punti">${C0.aree.map(([k, t, max]) => { const v = Math.min(max, +(mio.punteggi?.[k] ?? 0) || 0); return `<div><span>${esc(t)}</span><i style="--p:${v / max * 100}%"></i><b>${v}/${max}</b></div>`; }).join('')}</div>
+        <div class="acc-lib-esito ${tot >= (C0.soglia || 80) ? 'pronto' : ''}">${tot >= (C0.soglia || 80) ? `✓ ${tot}/100: soglia superata. La certificazione arriva con la conferma della direzione del reparto.` : `Valutazione attuale ${tot}/100 · soglia ${C0.soglia || 80}.`}</div>` : '<p class="intro-s">La valutazione arriva al termine del corso.</p>'}
+        ${mio.note ? `<p class="lib-nota">💬 ${esc(mio.note)}</p>` : ''}</div>`; })() : '';
+      if (!C0) return mioB + prossimamente('Corso', sig);
+      return `${mioB}<div class="rep-corso rivela"><div class="rep-doc-t"><small>Un solo corso · ${C0.durata} giorni · soglia ${C0.soglia}/100</small><h3>${esc(C0.titolo)}</h3></div><p>${esc(C0.descrizione)}</p>
+        <div class="rep-2"><div><h4>Durante il corso</h4><ul>${C0.cosa.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div><div><h4>Come si entra</h4><ol class="fasi">${C0.fasi.map(x => `<li><div><span>${esc(x)}</span></div></li>`).join('')}</ol></div></div>
+        <h4>Valutazione finale</h4><div class="tab"><table><thead><tr><th>Area</th><th>Punti</th><th>Cosa si osserva</th></tr></thead><tbody>${C0.aree.map(([, t, p, d]) => `<tr><td><b>${esc(t)}</b></td><td>${p}</td><td>${esc(d)}</td></tr>`).join('')}<tr><td><b>Totale</b></td><td><b>100</b></td><td>Soglia minima <b>${C0.soglia}/100</b></td></tr></tbody></table></div></div>`;
+    }
+    return '';
+  }
+  document.addEventListener('click', async e => {
+    const r = e.target.closest('[data-rep]'); if (r) { REP.scheda = 'comunicazioni'; location.hash = 'reparto-' + r.dataset.rep; return; }
+    const c = e.target.closest('[data-rcan]'); if (c) { REP.scheda = c.dataset.rcan; renderReparto(); $('.rep-corpo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    const v = e.target.closest('[data-rvai]'); if (v) { e.preventDefault(); document.getElementById(v.dataset.rvai)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    const d = e.target.closest('[data-rdel]');
+    if (d && gestisco(REP.id)) { const m = REP.membri.find(x => String(x.id) === d.dataset.rdel); if (!m || !(await chiedi(`Togliere ${m.nome} dal reparto?`, 'Sparisce dalla gerarchia interna. Puoi riaggiungerlo quando vuoi.', 'Togli', 'Annulla'))) return; const sb = await db(); const { error } = await sb.from(T('reparto_membri')).delete().eq('id', m.id); if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaReparti(true); renderReparto(); toast('Tolto dal reparto', 'ok'); }
+  });
+  document.addEventListener('change', async e => {
+    const s = e.target.closest('[data-rruolo]'); if (!s || !gestisco(REP.id)) return;
+    const sb = await db(); const { error } = await sb.from(T('reparto_membri')).update({ ruolo: s.value }).eq('id', s.dataset.rruolo);
+    if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; } await caricaReparti(true); renderReparto(); toast('Ruolo aggiornato ✓', 'ok');
+  });
+  document.addEventListener('submit', async e => {
+    const f = e.target; if (!f.matches('#rep-add, .rep-corso-form')) return; e.preventDefault();
+    if (!gestisco(REP.id)) return; const sb = await db(), id = REP.id;
+    if (f.id === 'rep-add') {
+      const did = f.did.value.trim(), nome = f.nome.value.trim(), ruolo = f.ruolo.value.trim();
+      if (!/^\d{17,20}$/.test(did)) { toast('L\'ID Discord è un numero di 17-20 cifre', 'ko'); return; }
+      if (!nome || !ruolo) { toast('Scrivi nome e ruolo', 'ko'); return; }
+      const { error } = await sb.from(T('reparto_membri')).upsert({ reparto: id, discord_id: did, nome, ruolo }, { onConflict: 'reparto,discord_id' });
+      if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; }
+      await caricaReparti(true); renderReparto(); toast(`${nome} aggiunto al reparto ✓`, 'ok'); return;
+    }
+    const D = REP.dati[id] || {}, punteggi = {};
+    for (const [k, , max] of D.corso?.aree || []) { const v = f['p-' + k].value; if (v !== '') punteggi[k] = Math.min(max, Math.max(0, Math.round(+v))); }
+    REP.corso = f.dataset.did;
+    const { error } = await sb.from(T('reparto_corsi')).upsert({ reparto: id, discord_id: f.dataset.did, inizio: f.inizio.value || null, punteggi, note: f.note.value.trim() || null }, { onConflict: 'reparto,discord_id' });
+    if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; }
+    await caricaReparti(true); renderReparto(); toast('Corso salvato ✓ La recluta lo vede nel suo addestramento', 'ok');
+  });
+
   function renderAccademia() {
     const A = ACCAD, oggi = new Date().getDay();
     const sett = [1, 2, 3, 4, 5, 6, 0].map(g => { const ls = (A.lezioni || []).filter(l => l.g === g); return `<div class="acc-g${g === oggi ? ' oggi' : ''}${ls.length ? '' : ' vuoto'}"><b>${GIORNI[g]}</b>${ls.length ? ls.map(l => `<span class="acc-l ${esc(l.tipo.toLowerCase())}"><i>${esc(l.inizio)}–${esc(l.fine)}</i>${esc(l.tipo)}</span>`).join('') : '<em>Nessuna lezione</em>'}</div>`; }).join('');
@@ -1232,7 +1380,7 @@
         <div class="acc-luogo"><small>Dove</small><b>${esc(A.luogo || '')}</b><span>${esc(A.anticipo || '')}</span></div>
       </div>
       <div class="sez-testa rivela"><small>Dal Comando e dall'H.R.</small><h2>Comunicazioni</h2>${ACC.stato === 'comandante' ? '<span class="sez-dx">Le scrivete voi: le vedono solo i membri verificati</span>' : ''}</div>
-      <div id="acc-com" class="rivela">${blocchiCom()}</div>
+      <div id="acc-com" class="rivela">${blocchiCom('accademia')}</div>
       <div class="sez-testa rivela"><small>Calendario</small><h2>Lezioni della settimana</h2></div>
       <div class="acc-sett rivela">${sett}</div>
       <div class="sez-testa rivela"><small>Prima di presentarsi</small><h2>Requisiti obbligatori</h2></div>
@@ -1547,7 +1695,7 @@
   }
   function mostraBloccato(v) {
     mostraVista('bloccato');
-    const nome = { strumenti: 'Strumenti', esami: 'Esami', accademia: 'Accademia' }[v] || 'Sezione riservata';
+    const nome = { strumenti: 'Strumenti', esami: 'Esami', accademia: 'Accademia', reparti: 'Reparti' }[v] || 'Sezione riservata';
     const [t, c] = ETICH[ACC.stato] || ETICH.ospite;
     const testo = ACC.stato === 'in_verifica' ? 'Il tuo screen è in verifica: appena l\'Alto Comando lo approva, questa sezione si apre da sola.'
       : ACC.stato === 'rifiutato' ? `La verifica non è stata approvata${ACC.riga?.nota ? ` (${esc(ACC.riga.nota)})` : ''}. Puoi mandare un nuovo screen.`
