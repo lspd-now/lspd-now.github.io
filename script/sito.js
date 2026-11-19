@@ -1033,6 +1033,12 @@
       LS.set(k, { t: Date.now(), p }); return p;
     } catch { return c ? c.p : null; }
   }
+  // credito del web designer in home (separato dal Comando)
+  (async () => {
+    const p = await profiloDiscord('633339352491229184'); if (!p) return;
+    if (p.avatar) { const im = $('#dev-img'); if (im) { im.onerror = () => { im.onerror = null; im.src = avatarBase('633339352491229184'); }; im.src = p.avatar; } }
+    if (p.nome) { const n = $('#dev-nome'); if (n) n.textContent = p.nome; }
+  })();
   const nomeAC = p => p.nome || profiliAC[p.discordId]?.nome || p.grado;
   const avatarAC = p => profiliAC[p.discordId]?.avatar || avatarBase(p.discordId);
   function cartaAC(p) {

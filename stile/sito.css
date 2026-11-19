@@ -1546,6 +1546,23 @@ body[data-defcon="2"]:after,body[data-defcon="1"]:after{box-shadow:inset 0 0 200
 .cerca-ruoli input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--linea2);background:var(--notte);color:var(--testo);font:inherit}
 @media (max-width:700px){.ruolo-r2{grid-template-columns:1fr}}
 
+/* ════════ CREDITO WEB DESIGNER ════════ */
+.crediti{display:flex;justify-content:center;margin:22px 0 50px}
+.dev{display:inline-flex;align-items:center;gap:14px;padding:10px 18px 10px 10px;border-radius:99px;text-decoration:none;color:var(--testo);background:linear-gradient(120deg,rgba(88,101,242,.16),rgba(167,139,250,.1)),var(--pannello);border:1px solid rgba(88,101,242,.45);box-shadow:0 14px 40px -24px #5865f2;transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.dev:hover{transform:translateY(-3px);box-shadow:0 22px 50px -22px #5865f2}
+.dev-av{position:relative;width:52px;height:52px;flex:none}
+.dev-av img{position:relative;width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid var(--pannello)}
+.dev-anello{position:absolute;inset:-3px;border-radius:50%;background:conic-gradient(from 0deg,#5865f2,#a78bfa,#22d3ee,#5865f2);animation:gira 4s linear infinite}
+.dev-ico{position:absolute;right:-6px;bottom:-4px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#5865f2;border:2px solid var(--pannello)}
+.dev-ico svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.dev-t{display:grid;gap:1px}
+.dev-t small{font:700 10.5px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:#a5b0ff}
+.dev-t b{font:900 21px/1.05 var(--f-titolo);text-transform:uppercase}
+.dev-t em{font-style:normal;font-size:12.5px;color:var(--tenue)}
+.dev-dc{width:30px;height:30px;color:#a5b0ff;margin-left:4px}
+.dev-dc svg{width:100%;height:100%}
+@media (max-width:600px){.dev{padding:8px 14px 8px 8px}.dev-t em{display:none}.dev-dc{display:none}}
+
 /* ════════ FOTO LSPD ════════ */
 .hero-foto{position:absolute;inset:0;z-index:0}
 .hero-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity 1.8s ease,transform 8s ease}
