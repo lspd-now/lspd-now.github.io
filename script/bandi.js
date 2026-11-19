@@ -64,5 +64,33 @@ window.GU_BANDI = [
       ['Conferma', 'Conferma come Operatore S.W.A.T.']
     ],
     note: 'Bando riservato al personale già in servizio nell\'LSPD.'
+  },
+  {
+    id: 'brevetto-asd-2026',
+    numero: 'Bando interno n. 03/2026',
+    titolo: 'Brevetto A.S.D. · Unità elicotteri',
+    attivo: false,
+    foto: 'immagini/foto/elicottero-fianco.jpg',
+    sottotitolo: 'Abilitazione al pilotaggio degli elicotteri LSPD (unità EAGLE)',
+    apertoA: 'Agenti LSPD in servizio',
+    interno: true,
+    apertura: '',
+    chiusura: '2026-12-31T23:59',
+    posti: 4,
+    esameRichiesto: false,
+    descrizione: "Selezione interna per entrare nell'Air Support Division: il supporto aereo al pattugliamento con gli elicotteri (unità EAGLE), con sorveglianza dall'alto, supporto visivo e tracciamento dei sospetti per le pattuglie a terra.",
+    requisiti: [
+      'Essere un agente LSPD attivo',
+      'Nessuna sanzione disciplinare attiva',
+      'Conoscenza delle comunicazioni radio (art. 5.1) e delle regole sugli elicotteri nei livelli DEFCON (art. 10.1)'
+    ],
+    preferenziali: ['Esperienza di pilotaggio di elicotteri', 'Esperienza negli inseguimenti e nel coordinamento con le pattuglie'],
+    fasi: [
+      ['Candidatura', 'Si invia dal sito, entro la chiusura del bando.'],
+      ['Valutazione', 'Il responsabile A.S.D. e il Comando valutano le candidature.'],
+      ['Addestramento al volo', 'Prove pratiche di pilotaggio e di supporto alle pattuglie.'],
+      ['Brevetto', 'Rilascio del brevetto A.S.D. e ingresso nel reparto.']
+    ],
+    note: 'Bando riservato al personale già in servizio nell\'LSPD.'
   }
 ];

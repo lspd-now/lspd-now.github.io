@@ -1333,6 +1333,52 @@ body[data-defcon="2"]:after,body[data-defcon="1"]:after{box-shadow:inset 0 0 200
 .rep-punti b{text-align:right}
 @media (max-width:900px){.rep-corpo{grid-template-columns:1fr}.rep-canali{position:static;grid-template-columns:1fr 1fr}.rep-add,.rep-corso-form,.rep-2{grid-template-columns:1fr}.rep-punti div{grid-template-columns:1fr 1fr 50px}}
 
+/* ════════ CODICE PENALE ════════ */
+.cp-wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.cp-barra{display:grid;gap:10px;margin-bottom:12px}
+.cp-barra input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--linea2);background:var(--notte);color:var(--testo);font:inherit}
+.cp-filtri{display:flex;flex-wrap:wrap;gap:6px}
+.cp-f{padding:7px 12px;border-radius:99px;border:1px solid var(--linea2);background:none;color:var(--tenue);font:700 12.5px var(--f-testo);cursor:pointer}
+.cp-f.on{background:var(--blu);border-color:var(--blu);color:#fff}
+.cp-testa,.cp-r summary{display:grid;grid-template-columns:80px minmax(0,1fr) 150px 150px 34px 34px;gap:10px;align-items:center}
+.cp-testa{padding:6px 14px;font:700 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tenue)}
+.cp-lista{display:grid;gap:6px}
+.cp-r{border-radius:12px;background:var(--pannello);border:1px solid var(--linea)}
+.cp-r.sel{border-color:var(--blu);box-shadow:inset 3px 0 0 var(--blu)}
+.cp-r summary{padding:10px 14px;cursor:pointer;list-style:none}
+.cp-r summary::-webkit-details-marker{display:none}
+.cp-r code{font:700 13px var(--f-mono);color:var(--blu-chiaro)}
+.cp-r b{font-weight:700;font-size:14.5px}
+.cp-m,.cp-p{font-size:13.5px;color:#cfd9f5}
+.cp-k{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;font:800 14px var(--f-titolo);font-style:normal;color:#06101f;background:var(--k)}
+.cp-k.vuota{background:var(--linea);color:var(--tenue)}
+.cp-add{width:30px;height:30px;border-radius:9px;border:1px solid var(--linea2);background:none;color:var(--testo);font:800 15px var(--f-testo);cursor:pointer}
+.cp-r.sel .cp-add{background:var(--blu);border-color:var(--blu)}
+.cp-det{padding:0 14px 12px;display:grid;gap:6px;font-size:14px;color:#cfd9f5}
+.cp-det p{margin:0}
+.cp-nota b{color:var(--giallo);margin-right:4px}
+.cp-det small{color:var(--tenue)}
+.cp-verbale{position:sticky;top:90px;display:grid;gap:10px;padding:16px;border-radius:18px;background:linear-gradient(160deg,var(--pannello),var(--pannello2));border:1px solid var(--linea2)}
+.cp-verbale h4{margin:0;display:flex;justify-content:space-between;font:800 19px var(--f-titolo);text-transform:uppercase}
+.cp-verbale h4 small{font:700 12px var(--f-mono);color:var(--blu-chiaro);text-transform:none}
+.cp-verbale ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:240px;overflow:auto}
+.cp-verbale li{display:flex;justify-content:space-between;gap:8px;font-size:13.5px}
+.cp-verbale li button{border:0;background:none;color:var(--tenue);cursor:pointer}
+.cp-tot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cp-tot div{padding:10px;border-radius:12px;background:var(--notte);border:1px solid var(--linea)}
+.cp-tot small{display:block;font:700 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--tenue)}
+.cp-tot b{font:800 20px var(--f-titolo)}
+.cp-az{display:flex;gap:8px;flex-wrap:wrap}
+.cp-fonte{margin-top:14px;font-size:12.5px;color:var(--tenue)}
+@media (max-width:1000px){.cp-wrap{grid-template-columns:1fr}.cp-verbale{position:static;order:-1}}
+@media (max-width:700px){.cp-testa{display:none}.cp-r summary{grid-template-columns:62px minmax(0,1fr) 30px 32px;row-gap:4px}.cp-m,.cp-p{grid-column:2/3;font-size:12.5px}.cp-m{grid-row:2}.cp-p{grid-row:3}}
+
+.rep-banner{position:relative;height:190px;border-radius:18px;overflow:hidden;background:center 40%/cover;border:1px solid var(--linea2);display:flex;flex-direction:column;justify-content:flex-end;padding:16px 20px}
+.rep-banner:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(5,10,24,.92))}
+.rep-banner span,.rep-banner b{position:relative}
+.rep-banner span{font:700 12px var(--f-mono);letter-spacing:.14em;color:var(--rc)}
+.rep-banner b{font:900 30px/1 var(--f-titolo);text-transform:uppercase}
+
 /* ════════ FOTO LSPD ════════ */
 .hero-foto{position:absolute;inset:0;z-index:0}
 .hero-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity 1.8s ease,transform 8s ease}

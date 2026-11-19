@@ -725,6 +725,7 @@ Note:</pre></div>
     <h3><span class="ref">ART. 8.1</span>Classificazione dei reati</h3>
     <p>La classificazione dei reati distingue i crimini in base alla loro <b>gravità e alle conseguenze</b>: serve a capire quanto è serio un reato, chi lo commette e quali misure adottare per prevenirlo o punirlo.</p>
     <p>Tutti i reati si consultano nel <b>codice penale e civile di Los Santos</b>. Per i limiti delle pene e il cumulo vedi gli <a href="#art-4-14">art. 4.14</a> e <a href="#art-4-16">4.16</a>.</p>
+    <p><a class="btn piccolo" href="#strumenti-codice">⚖️ Apri il codice penale</a></p>
   </article>
 
   <article class="art" id="art-8-2" data-t="Sanzioni e pene">
@@ -799,11 +800,12 @@ Note:</pre></div>
 <section class="vista" id="v-strumenti" data-vista="strumenti" aria-label="Strumenti" hidden>
   <div class="wrap">
     <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/agente-garage.jpg')">
-      <div><small>Consultazione rapida</small><h1>Strumenti <span>operativi</span></h1><p>Quello che serve durante il turno, senza cercare nel manuale: codici radio, checklist degli interventi, carriera e domande frequenti.</p></div>
+      <div><small>Consultazione rapida</small><h1>Strumenti <span>operativi</span></h1><p>Quello che serve durante il turno, senza cercare nel manuale: codici radio, checklist degli interventi, codice penale, carriera e domande frequenti.</p></div>
     </div>
     <div class="schede" role="tablist" aria-label="Strumenti">
       <button type="button" role="tab" data-s="radio" aria-selected="true">Codici radio</button>
       <button type="button" role="tab" data-s="prontuario" aria-selected="false">Prontuario</button>
+      <button type="button" role="tab" data-s="codice" aria-selected="false">Codice penale</button>
       <button type="button" role="tab" data-s="carriera" aria-selected="false">Carriera</button>
       <button type="button" role="tab" data-s="faq" aria-selected="false">Domande frequenti</button>
     </div>
@@ -836,6 +838,19 @@ Note:</pre></div>
     <div class="pannello-s" id="s-prontuario" role="tabpanel" hidden>
       <p class="intro-s">Spunta i passi mentre li fai. Ogni scheda rimanda all'articolo completo del manuale.</p>
       <div class="griglia-p" id="prontuario"></div>
+    </div>
+
+    <div class="pannello-s" id="s-codice" role="tabpanel" hidden>
+      <p class="intro-s">Il Codice Penale e Procedurale di Now V4: ogni reato con multa, pena detentiva, classe e spiegazione. Cerca, filtra per categoria e tocca <b>＋</b> per preparare il verbale.</p>
+      <div class="cp-wrap">
+        <div class="cp-princ">
+          <div class="cp-barra"><input type="search" id="cp-q" placeholder="Cerca un reato o un articolo (es. rapina, 300.3)" autocomplete="off"><div class="cp-filtri" id="cp-filtri"></div></div>
+          <div class="cp-testa" aria-hidden="true"><span>Art.</span><span>Reato</span><span>Multa massima</span><span>Detenzione massima</span><span>Cl.</span><span></span></div>
+          <div class="cp-lista" id="cp-lista"></div>
+        </div>
+        <aside class="cp-verbale" id="cp-verbale" aria-label="Verbale"></aside>
+      </div>
+      <p class="cp-fonte">Fonte: Now V4 · Codice Penale e Procedurale. Le colonne «cavigliera», «processo» e «ritiro PDA» del documento originale non sono riportate qui: per quelle fa fede il documento.</p>
     </div>
 
     <div class="pannello-s" id="s-carriera" role="tabpanel" hidden>
@@ -938,6 +953,7 @@ Note:</pre></div>
 <script src="script/impostazioni.js"></script>
 <script src="script/bandi.js"></script>
 <script src="script/esami.js"></script>
+<script src="script/codice-penale.js"></script>
 <script src="script/sito.js"></script>
 </body>
 </html>

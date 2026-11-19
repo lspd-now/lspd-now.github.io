@@ -458,6 +458,57 @@
   $('#prontuario').addEventListener('change', e => { const c = e.target.closest('.pron'); if (!c) return; const tot = $$('input', c).length, n = $$('input:checked', c).length; $('.pron-n', c).textContent = `${n}/${tot}`; c.classList.toggle('completa', n === tot); if (n === tot) toast(`«${$('h3', c).textContent}» completato ✓`, 'ok'); });
   $('#prontuario').addEventListener('click', e => { const b = e.target.closest('.azzera'); if (!b) return; const c = b.closest('.pron'); $$('input', c).forEach(i => { i.checked = false; }); $('.pron-n', c).textContent = `0/${$$('input', c).length}`; c.classList.remove('completa'); });
 
+  /* ── codice penale: ricerca, filtri e verbale con i limiti dell'art. 4.14 ── */
+  const CP = (window.LSPD_CP && window.LSPD_CP.reati) || [];
+  const CPsel = new Set(LS.get('lspd-cp-sel', []));
+  let cpCat = 'Tutte', cpQ = '';
+  const COL_CL = { A: '#ff3b3b', B: '#ff9f43', C: '#ffc94a', D: '#8db8ff', E: '#2fd38a', S: '#a78bfa' };
+  const cpEuro = s => { const m = String(s).match(/^\$\s?([\d.]+)$/); return m ? +m[1].replace(/\./g, '') : null; };
+  const cpMesi = s => { if (/ergastolo/i.test(s)) return Infinity; const n = (String(s).replace(/\[[^\]]*\]/g, '').match(/\d+/g) || []).map(Number); return n.length ? Math.max(...n) : 0; };
+  const cpSoldi = n => '$' + n.toLocaleString('it-IT');
+  function cpLista() {
+    const box = $('#cp-lista'); if (!box) return;
+    const q = cpQ.toLowerCase().trim();
+    const L = CP.filter(r => (cpCat === 'Tutte' || r.c === cpCat) && (!q || `${r.a} ${r.r} ${r.n} ${r.d}`.toLowerCase().includes(q)));
+    box.innerHTML = L.map(r => `<details class="cp-r${CPsel.has(r.a) ? ' sel' : ''}"><summary><code>${esc(r.a)}</code><b>${esc(r.r)}</b><span class="cp-m">${esc(r.m)}</span><span class="cp-p">${esc(r.p)}</span>${r.k ? `<em class="cp-k" style="--k:${COL_CL[r.k] || '#8a96b6'}">${esc(r.k)}</em>` : '<em class="cp-k vuota">—</em>'}<button type="button" class="cp-add" data-cpadd="${esc(r.a)}" aria-label="${CPsel.has(r.a) ? 'Togli dal' : 'Aggiungi al'} verbale">${CPsel.has(r.a) ? '✓' : '＋'}</button></summary>
+      <div class="cp-det">${r.d ? `<p>${esc(r.d)}</p>` : ''}${r.n ? `<p class="cp-nota"><b>Note</b> ${esc(r.n)}</p>` : ''}<small>${esc(r.c)}</small></div></details>`).join('') || '<p class="intro-s">Nessun reato trovato.</p>';
+  }
+  function cpFiltri() {
+    const f = $('#cp-filtri'); if (!f) return;
+    f.innerHTML = ['Tutte', ...new Set(CP.map(r => r.c))].map(c => `<button type="button" class="cp-f${c === cpCat ? ' on' : ''}" data-cpcat="${esc(c)}">${esc(c.replace(" non perseguibili d'ufficio (interne alla Procura)", ' (Procura)'))}${c === 'Tutte' ? ` · ${CP.length}` : ''}</button>`).join('');
+  }
+  function cpVerbale() {
+    const v = $('#cp-verbale'); if (!v) return;
+    const S = CP.filter(r => CPsel.has(r.a));
+    if (!S.length) { v.innerHTML = '<h4>Verbale</h4><p class="intro-s">Tocca ＋ accanto ai reati: qui si sommano multe e pene e copi il testo per il rapporto di arresto.</p>'; return; }
+    let tot = 0, nonFisse = false, mesi = 0, erg = false; const cl = {};
+    for (const r of S) { const e = cpEuro(r.m); if (e == null) nonFisse = true; else tot += e; const m = cpMesi(r.p); if (m === Infinity) erg = true; else mesi += m; if (r.k) cl[r.k] = (cl[r.k] || 0) + 1; }
+    const cumulo = [cl.B >= 5 && `${cl.B} reati di classe B: ogni cinque equivalgono a un reato di classe A`, cl.C >= 5 && `${cl.C} reati di classe C: ogni cinque equivalgono a un reato di classe B`].filter(Boolean);
+    v.innerHTML = `<h4>Verbale <small>${S.length} ${S.length === 1 ? 'reato' : 'reati'}</small></h4>
+      <ul>${S.map(r => `<li><span><code>${esc(r.a)}</code> ${esc(r.r)}</span><button type="button" data-cpadd="${esc(r.a)}" aria-label="Togli">✕</button></li>`).join('')}</ul>
+      <div class="cp-tot"><div><small>Multe sommate</small><b>${cpSoldi(tot)}${nonFisse ? ' +' : ''}</b></div><div><small>Pene massime sommate</small><b>${erg ? 'Ergastolo' : mesi + ' mesi'}</b></div></div>
+      <div class="box obbligo"><b class="e">LIMITI IN ARRESTO · ART. 4.14</b><p>In un arresto si applicano al massimo <b>${cpSoldi(Math.min(tot, 25000))}</b> e <b>${erg ? 8 : Math.min(mesi, 8)} mesi</b> (8 minuti effettivi).${nonFisse ? ' Alcune voci non hanno un importo fisso (No Limit, percentuali o restituzioni): leggi le note.' : ''}</p></div>
+      ${cumulo.length ? `<div class="box nota"><b class="e">CUMULO · ART. 4.16</b><p>${cumulo.join('. ')}.</p></div>` : ''}
+      <div class="cp-az"><button class="btn p" type="button" data-cpcopia>📋 Copia per il rapporto</button><button class="btn ghost" type="button" data-cpsvuota>Svuota</button></div>`;
+  }
+  const cpSalva = () => LS.set('lspd-cp-sel', [...CPsel]);
+  if ($('#cp-lista')) {
+    cpFiltri(); cpLista(); cpVerbale();
+    $('#cp-q').addEventListener('input', e => { cpQ = e.target.value; cpLista(); });
+    $('#s-codice').addEventListener('click', async e => {
+      const f = e.target.closest('[data-cpcat]'); if (f) { cpCat = f.dataset.cpcat; cpFiltri(); cpLista(); return; }
+      const ad = e.target.closest('[data-cpadd]');
+      if (ad) { e.preventDefault(); e.stopPropagation(); const k = ad.dataset.cpadd; CPsel.has(k) ? CPsel.delete(k) : CPsel.add(k); cpSalva(); cpLista(); cpVerbale(); return; }
+      if (e.target.closest('[data-cpsvuota]')) { CPsel.clear(); cpSalva(); cpLista(); cpVerbale(); return; }
+      if (e.target.closest('[data-cpcopia]')) {
+        const S = CP.filter(r => CPsel.has(r.a)); let tot = 0, mesi = 0, erg = false;
+        for (const r of S) { const x = cpEuro(r.m); if (x != null) tot += x; const m = cpMesi(r.p); if (m === Infinity) erg = true; else mesi += m; }
+        const testo = ['REATI CONTESTATI', ...S.map(r => `- Art. ${r.a} · ${r.r}${r.k ? ` · classe ${r.k}` : ''} · ${r.m} · ${r.p}`), '', `Multa applicata: ${cpSoldi(Math.min(tot, 25000))} (somma ${cpSoldi(tot)}, massimo in arresto $25.000)`, `Detenzione: ${erg ? 8 : Math.min(mesi, 8)} mesi (massimo in arresto 8 mesi · art. 4.14)`].join('\n');
+        toast((await copia(testo)) ? 'Verbale copiato: incollalo nel rapporto di arresto' : 'Copia non riuscita', 'ok');
+      }
+    });
+  }
+
   /* ── carriera ── */
   const PASSI = { 'Recluta': ['Accademia H.R.', '2 lezioni teoriche e 1 pratica (3 bollini verdi), esame orale, 14 giorni di affiancamento con 5 rapporti (almeno 4 positivi), esame pratico su strada'], 'Agente I': ['Almeno 14 giorni', 'Valutazioni operative e disciplinari positive'], 'Agente II': ['Almeno 14 giorni', 'Valutazioni operative e disciplinari positive'], 'Agente III': ['Almeno 14 giorni', 'Valutazioni positive e capacità di coordinamento'], 'Agente Coordinatore': ['Almeno 2 settimane da Agente III', 'Eccellenza nel coordinare le squadre ed esame da Sergente'] };
   const percorso = FASCE.flatMap(([fascia, , g]) => g.map(x => [...x, fascia])).reverse();
@@ -1284,7 +1335,7 @@
       <div class="rep-scelta">${Object.entries(REPARTI).map(([k, [s, e, n, c]]) => `<button type="button" class="rep-card${k === id ? ' on' : ''}" data-rep="${k}" style="--rc:${c}"><span class="rep-emo">${e}</span><span><b>${s}</b><small>${n} · ${membriRep(k).length} ${membriRep(k).length === 1 ? 'membro' : 'membri'}</small></span>${REP.miei.includes(k) && ACC.stato !== 'comandante' ? '<em>Responsabile</em>' : ''}</button>`).join('')}</div>
       <div class="rep-corpo" style="--rc:${col}">
         <nav class="rep-canali" aria-label="Canali ${esc(sig)}"><div class="rep-cat">${emo} ${esc(sig)}</div>${canali.map(([k, e, t]) => `<button type="button" data-rcan="${k}" class="${REP.scheda === k ? 'on' : ''}"><span class="hash">#</span>${e} ${esc(t)}${k === 'comunicazioni' && nuove ? `<i class="rep-n">${nuove}</i>` : ''}${k === 'gestione' ? ' 🔒' : ''}</button>`).join('')}</nav>
-        <div class="rep-vista">${D.missione ? `<p class="rep-missione">${esc(D.missione)}</p>` : ''}${schedaRep(id, D, ges)}</div>
+        <div class="rep-vista">${D.foto ? `<div class="rep-banner" style="background-image:url('${esc(D.foto)}')"><span>${emo} ${esc(sig)}</span><b>${esc(nome)}</b></div>` : ''}${D.missione ? `<p class="rep-missione">${esc(D.missione)}</p>` : ''}${schedaRep(id, D, ges)}</div>
       </div>`;
     rivela();
     if (REP.scheda === 'comunicazioni') segnaRepLette();
@@ -2012,6 +2063,7 @@
     ['pattuglia-a-piedi', 'Pattuglia a piedi a Vinewood'], ['squadra-muretto', 'Squadra in pausa operativa'], ['agente-schiena', 'Los Santos Police · S.W.A.T. Team'],
     ['pattuglia-coppia', 'Pattuglia in coppia'], ['sorveglianza', 'Attività di osservazione'], ['agente-figura', 'Agente in centrale'],
     ['swat-orologio', 'Pronti all\'intervento'], ['squadra-pausa', 'Briefing informale'], ['agente-garage', 'Nel garage della centrale'],
+    ['elicottero-fianco', 'Elicottero A.S.D. in servizio'], ['elicottero-tramonto', 'A.S.D. · volo al tramonto'], ['elicottero-palazzi', 'A.S.D. · sorvolo della città'],
     ['swat-team-schiena', 'S.W.A.T. Team'], ['agente-ritratto', 'Ritratto di servizio'], ['agente-murales', 'Agente a Los Santos'], ['agente-colori', 'Servizio fotografico LSPD'],
   ];
   function fotoHero() {
