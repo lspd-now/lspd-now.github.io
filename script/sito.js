@@ -1677,7 +1677,7 @@
   const COL_STATO = { 'Nuova': 'var(--blu-chiaro)', 'In valutazione': 'var(--giallo)', 'Colloquio fissato': '#a78bfa', 'Accettata': 'var(--verde)', 'Respinta': 'var(--rosso)' };
   const ICO_DC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.099.246.198.373.292a.077.077 0 0 1-.007.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.331c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418z"/></svg>';
   const LUCCHETTO = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.6"/></svg>';
-  const C = { scheda: 'riepilogo', esiti: [], cand: [], membri: [], libretti: [], storico: [], app: [], fA: 'aperti', utente: null, errore: '', fE: 'tutti', fR: 'tutti', qE: '', fS: 'tutti', qC: '', bando: null };
+  const C = { scheda: 'riepilogo', esiti: [], cand: [], membri: [], libretti: [], storico: [], app: [], fA: 'aperti', cmd: [], resp: [], qR: '', utente: null, errore: '', fE: 'tutti', fR: 'tutti', qE: '', fS: 'tutti', qC: '', bando: null };
   const cmdEl = $('#cmd');
   const quando = s => { const d = new Date(s); return isNaN(d) ? '—' : `${dataIt(d)} ${oraIt(d)}`; };
   const nomeEsame = id => { if (id === 'finale') return 'Esame d\'accademia'; const c = ESAMI.capitoli.find(x => x.id === id); return c ? `Cap. ${c.n} · ${c.titolo}` : id; };
@@ -1707,7 +1707,7 @@
   }
   async function caricaCmd(sb) {
     sb = sb || await db();
-    const [e, c, b, mb, lb, ls, ap] = await Promise.all([
+    const [e, c, b, mb, lb, ls, ap, cm, rs] = await Promise.all([
       sb.from(T('esiti')).select('*').order('creato', { ascending: false }).limit(1000),
       sb.from(T('candidature')).select('*').order('creato', { ascending: false }).limit(500),
       sb.from(T('bandi')).select('*').order('ordine', { ascending: true }),
@@ -1715,8 +1715,10 @@
       sb.from(T('libretti')).select('*').order('salvato', { ascending: false }).limit(500),
       sb.from(T('libretti_storico')).select('*').order('creato', { ascending: true }).limit(5000),
       sb.from(T('appuntamenti')).select('*').order('creato', { ascending: false }).limit(500),
+      sb.from(T('comandanti')).select('*'),
+      sb.from(T('responsabili')).select('*'),
     ]);
-    C.esiti = e.data || []; C.cand = c.data || []; C.membri = mb.data || []; C.libretti = lb.data || []; C.storico = ls.data || []; C.app = ap.data || [];
+    C.esiti = e.data || []; C.cand = c.data || []; C.membri = mb.data || []; C.libretti = lb.data || []; C.storico = ls.data || []; C.app = ap.data || []; C.cmd = cm.data || []; C.resp = rs.data || [];
     await Promise.all(C.membri.filter(x => x.screen && x.stato !== 'esterno').slice(0, 60).map(async x => { try { const { data } = await sb.storage.from(BUCKET).createSignedUrl(x.screen, 3600); x._url = data?.signedUrl || ''; } catch {} }));
     if (Array.isArray(b.data)) BANDI = b.data.map(r => normBando({ ...(r.dati || {}), id: r.id, ordine: r.ordine }));
     C.errore = [e.error, c.error, b.error, mb.error].filter(Boolean).map(x => x.message).join(' · ');
@@ -1728,13 +1730,13 @@
         <div class="cmd-az"><button class="btn piccolo" type="button" data-cmd="aggiorna">↻ Aggiorna</button><button class="btn piccolo ghost" type="button" data-cmd="esci">Esci</button></div>
       </div>
       ${C.errore ? `<p class="bc-nota" style="margin:0 0 14px">Alcuni dati non sono arrivati: ${esc(C.errore)}</p>` : ''}
-      <div class="schede cmd-schede" role="tablist">${[['riepilogo', 'Riepilogo'], ['esiti', `Esiti esami <span class="cnt">${C.esiti.length}</span>`], ['candidature', `Candidature${nuove ? ` <span class="cnt nuovo">${nuove} nuove</span>` : ''}`], ['verifiche', `Verifiche membri${daVer ? ` <span class="cnt nuovo">${daVer} da fare</span>` : ''}`], ['appuntamenti', `Appuntamenti${C.app.filter(x => x.stato === 'Ricevuto').length ? ` <span class="cnt nuovo">${C.app.filter(x => x.stato === 'Ricevuto').length} da gestire</span>` : ` <span class="cnt">${C.app.length}</span>`}`], ['libretti', `Libretti${daCtrl ? ` <span class="cnt nuovo">${daCtrl} da controllare</span>` : ` <span class="cnt">${C.libretti.length}</span>`}`], ['bandi', `Bandi <span class="cnt">${BANDI.length}</span>`]].map(([k, t]) => `<button type="button" role="tab" data-cs="${k}" aria-selected="${C.scheda === k}">${t}</button>`).join('')}</div>
+      <div class="schede cmd-schede" role="tablist">${[['riepilogo', 'Riepilogo'], ['esiti', `Esiti esami <span class="cnt">${C.esiti.length}</span>`], ['candidature', `Candidature${nuove ? ` <span class="cnt nuovo">${nuove} nuove</span>` : ''}`], ['verifiche', `Verifiche membri${daVer ? ` <span class="cnt nuovo">${daVer} da fare</span>` : ''}`], ['ruoli', 'Ruoli'], ['appuntamenti', `Appuntamenti${C.app.filter(x => x.stato === 'Ricevuto').length ? ` <span class="cnt nuovo">${C.app.filter(x => x.stato === 'Ricevuto').length} da gestire</span>` : ` <span class="cnt">${C.app.length}</span>`}`], ['libretti', `Libretti${daCtrl ? ` <span class="cnt nuovo">${daCtrl} da controllare</span>` : ` <span class="cnt">${C.libretti.length}</span>`}`], ['bandi', `Bandi <span class="cnt">${BANDI.length}</span>`]].map(([k, t]) => `<button type="button" role="tab" data-cs="${k}" aria-selected="${C.scheda === k}">${t}</button>`).join('')}</div>
       <div id="cmd-corpo"></div>`;
     renderScheda();
   }
   function renderScheda() {
     const el = $('#cmd-corpo'); if (!el) return;
-    el.innerHTML = C.scheda === 'esiti' ? schedaEsiti() : C.scheda === 'candidature' ? schedaCandidature() : C.scheda === 'bandi' ? schedaBandi() : C.scheda === 'verifiche' ? schedaVerifiche() : C.scheda === 'libretti' ? schedaLibretti() : C.scheda === 'appuntamenti' ? schedaAppuntamenti() : schedaRiepilogo();
+    el.innerHTML = C.scheda === 'esiti' ? schedaEsiti() : C.scheda === 'candidature' ? schedaCandidature() : C.scheda === 'bandi' ? schedaBandi() : C.scheda === 'verifiche' ? schedaVerifiche() : C.scheda === 'libretti' ? schedaLibretti() : C.scheda === 'appuntamenti' ? schedaAppuntamenti() : C.scheda === 'ruoli' ? schedaRuoli() : schedaRiepilogo();
   }
   const rigaEsito = e => `<div class="cmd-riga"><span class="pill ${e.superato ? 'si' : 'no'}">${e.superato ? 'Superato' : 'Non sup.'}</span><div><b>${esc(e.nome || '—')}</b><small>${esc(nomeEsame(e.esame))} · ${quando(e.creato)}</small></div><em>${e.percentuale ?? 0}%</em></div>`;
   const rigaCand = c => { const st = c.stato || 'Nuova'; return `<div class="cmd-riga"><span class="pill st" style="--sc:${COL_STATO[st] || 'var(--blu)'}">${esc(st)}</span><div><b>${esc(c.nome || '—')}</b><small>${esc(c.bando_titolo || c.bando_id || '')} · ${quando(c.creato)}</small></div></div>`; };
@@ -1835,6 +1837,44 @@
         ${x.controllato_da ? `<small class="lib-ctrl">Controllato da ${esc(x.controllato_da)} · ${quando(x.controllato)}</small>` : ''}
       </article>`; }).join('') || '<p class="intro-s">Nessuna recluta ha ancora salvato il libretto.</p>'}</div>`;
   }
+  // ruoli del sito: accesso, grado, Area Comando e responsabili dei reparti
+  const PROTETTI = ['670641594558316574', '633339352491229184'];
+  const NOMI_REP = { hsu: 'H.S.U.', mary: 'MARY', asd: 'A.S.D.' };
+  const ACCESSI = [['approvato', 'Membro LSPD'], ['in_verifica', 'In verifica'], ['esterno', 'Esterno'], ['rifiutato', 'Rifiutato']];
+  function schedaRuoli() {
+    const P = new Map(), add = (id, o) => { if (id) P.set(id, { id, ...(P.get(id) || {}), ...o }); };
+    for (const m of C.membri) add(m.discord_id, { m });
+    for (const c of C.cmd) add(c.discord_id, { cmd: c });
+    for (const r of C.resp) add(r.discord_id, { resp: [...(P.get(r.discord_id)?.resp || []), r] });
+    const nomeP = p => p.m?.nome || p.m?.discord_nome || (REP.membri || []).find(x => x.discord_id === p.id)?.nome || (AC.find(a => a.discordId === p.id) ? nomeAC(AC.find(a => a.discordId === p.id)) : '') || 'Non ancora entrato nel sito';
+    const q = C.qR.toLowerCase().trim();
+    const L = [...P.values()].filter(p => !q || `${p.id} ${nomeP(p)} ${p.m?.discord_nome || ''} ${p.cmd?.grado || ''} ${p.m?.grado || ''}`.toLowerCase().includes(q))
+      .sort((a, b) => (!!b.cmd - !!a.cmd) || ((b.resp || []).length - (a.resp || []).length) || nomeP(a).localeCompare(nomeP(b)));
+    return `<p class="intro-s">Qui decidi il ruolo di ognuno nel sito: accesso, grado LSPD, Area Comando e responsabile dei reparti. Le modifiche valgono dal prossimo caricamento del sito della persona. Il Capo della Polizia e l'amministratore del sito sono protetti 🔒.</p>
+      <form class="riquadro rep-add" id="ruolo-nuovo" novalidate>
+        <label class="campo"><span>ID Discord <em>*</em></span><input name="did" inputmode="numeric" maxlength="20" placeholder="es. 123456789012345678"></label>
+        <label class="campo"><span>Ruolo</span><select name="ruolo"><option value="comando">Area Comando</option>${Object.entries(NOMI_REP).map(([k, n]) => `<option value="${k}">Responsabile ${n}</option>`).join('')}</select></label>
+        <label class="campo"><span>Titolo</span><input name="titolo" maxlength="60" placeholder="es. Comandante · Responsabile HSU"></label>
+        <button class="btn p" type="submit">＋ Assegna il ruolo</button>
+      </form>
+      <label class="cerca-ruoli"><input type="search" data-qr value="${esc(C.qR)}" placeholder="Cerca per nome, ID Discord o grado"></label>
+      <div class="cmd-ver">${L.map(p => { const prot = PROTETTI.includes(p.id), mio = C.utente?.id === p.id; return `<article class="cmd-v ruolo" style="--sc:${p.cmd ? 'var(--oro)' : (p.resp || []).length ? 'var(--blu-chiaro)' : p.m?.stato === 'approvato' ? 'var(--verde)' : '#8a96b6'}">
+        <div class="cmd-v-t"><img src="${esc(p.m?.avatar || avatarBase(p.id))}" alt="" data-base="${esc(avatarBase(p.id))}"><div><b>${esc(nomeP(p))}${mio ? ' <small>(tu)</small>' : ''}</b><small>${p.m?.discord_nome ? esc(p.m.discord_nome) + ' · ' : ''}<a href="https://discord.com/users/${esc(p.id)}" target="_blank" rel="noopener">${esc(p.id)}</a></small></div></div>
+        <div class="ruolo-badge">${p.cmd ? `<span class="pill st" style="--sc:var(--oro)">★ ${esc(p.cmd.grado || 'Comando')}${prot ? ' 🔒' : ''}</span>` : ''}${(p.resp || []).map(r => `<span class="pill st" style="--sc:var(--blu-chiaro)">${esc(r.grado || 'Responsabile ' + NOMI_REP[r.reparto])}</span>`).join('')}${p.m ? `<span class="pill st" style="--sc:${p.m.stato === 'approvato' ? 'var(--verde)' : '#8a96b6'}">${esc((ACCESSI.find(a => a[0] === p.m.stato) || ['', p.m.stato])[1])}${p.m.grado ? ' · ' + esc(p.m.grado) : ''}</span>` : ''}</div>
+        ${p.m ? `<div class="ruolo-r2"><label class="cmd-grado"><span>Accesso</span><select data-racc="${esc(p.m.user_id)}">${ACCESSI.map(([v, t]) => `<option value="${v}"${v === p.m.stato ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+          <label class="cmd-grado"><span>Grado</span><select data-mgrado="${esc(p.m.user_id)}"><option value="">—</option>${GRADI_LISTA.map(g => `<option${g === p.m.grado ? ' selected' : ''}>${esc(g)}</option>`).join('')}</select></label></div>` : '<small class="lib-ctrl">Non ha ancora fatto l\'accesso con Discord: il ruolo vale appena entra.</small>'}
+        <div class="ruolo-r">
+          <label class="app-chk"><input type="checkbox" data-rcmd="${esc(p.id)}"${p.cmd ? ' checked' : ''}${prot ? ' disabled' : ''}> Area Comando${prot ? ' 🔒' : ''}</label>
+          ${p.cmd ? `<input class="ruolo-tit" data-rcmdtit="${esc(p.id)}" maxlength="60" value="${esc(p.cmd.grado || '')}" placeholder="Titolo"${prot ? ' disabled' : ''}>` : ''}
+          ${Object.entries(NOMI_REP).map(([k, n]) => `<label class="app-chk"><input type="checkbox" data-rresp="${esc(p.id)}" data-rrep="${k}"${(p.resp || []).some(r => r.reparto === k) ? ' checked' : ''}> Responsabile ${n}</label>`).join('')}
+        </div>
+      </article>`; }).join('') || '<p class="intro-s">Nessuno trovato.</p>'}</div>`;
+  }
+  async function salvaRuolo(fn, ok) {
+    const sb = await db(); const { error } = await fn(sb);
+    if (error) { toast('Non riuscito: ' + error.message, 'ko'); await caricaCmd(sb); renderScheda(); return false; }
+    await caricaCmd(sb); renderCmd(); toast(ok, 'ok'); return true;
+  }
   function schedaAppuntamenti() {
     const COLA = { Ricevuto: 'var(--giallo)', Confermato: 'var(--verde)', Rifiutato: 'var(--rosso)', Completato: 'var(--blu-chiaro)', Annullato: '#8a96b6' };
     const aperti = x => ['Ricevuto', 'Confermato'].includes(x.stato);
@@ -1930,14 +1970,38 @@
   cmdEl.addEventListener('input', e => { if (e.target.matches('input[data-cf]')) filtroCmd(e.target); });
   cmdEl.addEventListener('change', e => { if (e.target.matches('select[data-cf]')) filtroCmd(e.target); });
   cmdEl.addEventListener('change', async e => {
+    const t = e.target;
+    if (t.matches('[data-racc]')) return salvaRuolo(sb => sb.from(T('membri')).update({ stato: t.value }).eq('user_id', t.dataset.racc), `Accesso aggiornato: ${(ACCESSI.find(a => a[0] === t.value) || ['', t.value])[1]} ✓`);
+    if (t.matches('[data-rcmdtit]')) return salvaRuolo(sb => sb.from(T('comandanti')).update({ grado: t.value.trim() || 'Comando' }).eq('discord_id', t.dataset.rcmdtit), 'Titolo aggiornato ✓');
+    if (t.matches('[data-rcmd]')) {
+      const id = t.dataset.rcmd;
+      if (t.checked) return salvaRuolo(sb => sb.from(T('comandanti')).upsert({ discord_id: id, grado: 'Comando' }), '★ Area Comando assegnata: la vede dal prossimo accesso');
+      if (!(await chiedi('Togliere l\'Area Comando?', C.utente?.id === id ? 'Stai togliendo l\'Area Comando a te stesso: non potrai più tornare qui.' : 'Non potrà più vedere esiti, candidature, bandi e ruoli.', 'Togli', 'Annulla'))) { t.checked = true; return; }
+      return salvaRuolo(sb => sb.from(T('comandanti')).delete().eq('discord_id', id), 'Area Comando tolta');
+    }
+    if (t.matches('[data-rresp]')) {
+      const id = t.dataset.rresp, r = t.dataset.rrep;
+      return t.checked ? salvaRuolo(sb => sb.from(T('responsabili')).upsert({ discord_id: id, reparto: r, grado: 'Responsabile ' + NOMI_REP[r] }), `Responsabile ${NOMI_REP[r]} assegnato ✓`)
+        : salvaRuolo(sb => sb.from(T('responsabili')).delete().eq('discord_id', id).eq('reparto', r), `Non è più responsabile ${NOMI_REP[r]}`);
+    }
     const s = e.target.closest('[data-mgrado]'); if (!s) return;
     const sb = await db(); const { error } = await sb.from(T('membri')).update({ grado: s.value || null }).eq('user_id', s.dataset.mgrado);
     if (error) { toast('Grado non salvato: ' + error.message, 'ko'); return; }
     const x = C.membri.find(y => y.user_id === s.dataset.mgrado); if (x) x.grado = s.value || null;
     toast(`Grado aggiornato: ${s.value || 'nessuno'} ✓ ${/^recluta/i.test(s.value) || !s.value ? '' : '· ora vede l\'Area LSPD'}`, 'ok');
   });
+  cmdEl.addEventListener('input', e => {
+    const q = e.target.closest('[data-qr]'); if (!q) return;
+    C.qR = q.value; renderScheda(); const n = $('[data-qr]'); n.focus(); n.setSelectionRange(n.value.length, n.value.length);
+  });
   cmdEl.addEventListener('submit', async e => {
     e.preventDefault();
+    if (e.target.id === 'ruolo-nuovo') {
+      const f = e.target, id = f.did.value.trim(), r = f.ruolo.value, tit = f.titolo.value.trim();
+      if (!/^\d{17,20}$/.test(id)) { toast('L\'ID Discord è un numero di 17-20 cifre', 'ko'); return; }
+      return r === 'comando' ? salvaRuolo(sb => sb.from(T('comandanti')).upsert({ discord_id: id, grado: tit || 'Comando' }), '★ Area Comando assegnata')
+        : salvaRuolo(sb => sb.from(T('responsabili')).upsert({ discord_id: id, reparto: r, grado: tit || 'Responsabile ' + NOMI_REP[r] }), `Responsabile ${NOMI_REP[r]} assegnato ✓`);
+    }
     if (e.target.id === 'cmd-bando') return salvaBando(e.target);
     const fa = e.target.closest('.cmd-app-form');
     if (fa) {
