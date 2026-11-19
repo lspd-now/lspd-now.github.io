@@ -321,6 +321,7 @@
     if (r.v === 'regolamento' && r.el) scorso = scorriA(r.el, cambia);
     if (r.v === 'strumenti') apriScheda(r.s || scheda);
     if (r.v === 'bandi') {
+      if (!r.bando && !r.cand) apriPresentazione();
       renderBandi(r.bando); renderEsiti();
       if (r.cand) { apriCandidatura(r.cand); scorso = scorriA('candidatura', cambia); }
       else { $('#candidatura').hidden = true; if (r.bando) scorso = scorriA('bando-' + r.bando, cambia); }
@@ -1448,6 +1449,26 @@
     aggiornaProssima(); rivela(); segnaComLette();
   }
 
+  /* ── presentazione a schermo intero: la prima volta che si aprono i Bandi in ogni visita ── */
+  const pm = $('#promo-modale');
+  function apriPresentazione(forza) {
+    if (!pm || !pm.hidden) return;
+    let visto = false; try { visto = sessionStorage.getItem('lspd-promo') === '1'; } catch {}
+    if (visto && !forza) return;
+    if (!$('#porta').hidden || !$('#intro').hidden) return;
+    try { sessionStorage.setItem('lspd-promo', '1'); } catch {}
+    $('#pm-video').innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/WCFCk238L8M?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="They Want You · NOW v4 LSPD" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+    pm.hidden = false; document.documentElement.classList.add('porta-su');
+    requestAnimationFrame(() => pm.classList.add('aperta'));
+  }
+  function chiudiPresentazione() {
+    if (!pm || pm.hidden) return;
+    pm.classList.remove('aperta'); $('#pm-video').innerHTML = '';
+    setTimeout(() => { pm.hidden = true; if ($('#porta').hidden && $('#intro').hidden) document.documentElement.classList.remove('porta-su'); }, 300);
+  }
+  pm?.addEventListener('click', e => { if (e.target === pm || e.target.closest('[data-pm-chiudi]')) chiudiPresentazione(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') chiudiPresentazione(); });
+
   /* ── video promozionale: YouTube si carica solo quando si preme play ── */
   document.addEventListener('click', e => {
     if (e.target.closest('[data-promo-giu]')) { $('#bandi-lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
@@ -1455,7 +1476,7 @@
     const f = document.createElement('iframe');
     f.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.dataset.yt)}?autoplay=1&rel=0&modestbranding=1`;
     f.title = 'They Want You · NOW v4 LSPD'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true;
-    f.className = 'promo-frame'; v.replaceWith(f);
+    f.referrerPolicy = 'strict-origin-when-cross-origin'; f.className = 'promo-frame'; v.replaceWith(f);
   });
 
   /* ═════════════ AREA COMANDO (accesso con Discord) ═════════════ */

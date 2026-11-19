@@ -128,6 +128,19 @@
 
     <div class="bando-evidenza" id="bando-evidenza" hidden></div>
 
+    <section class="promo rivela" aria-label="Video promozionale LSPD">
+      <button class="promo-video" type="button" data-yt="WCFCk238L8M" aria-label="Guarda il video They Want You · NOW v4 LSPD">
+        <img src="https://i.ytimg.com/vi/WCFCk238L8M/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/WCFCk238L8M/hqdefault.jpg'">
+        <span class="promo-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+      </button>
+      <div class="promo-testo">
+        <small>Video ufficiale · Reclutamento</small>
+        <h2>They want <span>you</span></h2>
+        <p>Guarda cosa significa servire Los Santos con l'LSPD: pattuglie, reparti speciali e squadra. Se ti riconosci, il tuo posto è qui sotto.</p>
+        <a class="btn p" href="#bandi">Vai ai bandi →</a>
+      </div>
+    </section>
+
     <div class="sez-testa rivela"><small>Accesso rapido</small><h2>Tutto quello che serve in servizio</h2></div>
     <div class="categorie">
       <a class="cat rivela" href="#regolamento" style="--c:#1e6bff"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5V4.5M8 7h8M8 11h6"/></svg></span><b>Manuale operativo</b><span>10 capitoli, con ricerca e progressi di lettura</span></a>
@@ -870,13 +883,6 @@ Note:</pre></div>
     <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/squadra-pausa.jpg')">
       <div><small>Reclutamento</small><h1>Bandi e <span>candidature</span></h1><p>I bandi dell'LSPD si pubblicano solo qui. Le candidature si inviano dal sito e arrivano direttamente al Comando; l'esito compare qui, nella pagina Bandi.</p></div>
     </div>
-    <ol class="percorso rivela">
-      <li><b>1</b><span>Leggi il bando</span><small>Requisiti e scadenze</small></li>
-      <li><b>2</b><span>Studia il manuale</span><small>Le verifiche di capitolo aiutano</small></li>
-      <li><b>3</b><span>Candidatura online</span><small>Arriva subito al Comando</small></li>
-      <li><b>4</b><span>Colloquio H.R.</span><small>Con le Risorse Umane</small></li>
-      <li><b>5</b><span>Accademia</span><small>Da Recluta ad Agente I</small></li>
-    </ol>
     <section class="promo rivela" aria-label="Video promozionale LSPD">
       <button class="promo-video" type="button" data-yt="WCFCk238L8M" aria-label="Guarda il video They Want You · NOW v4 LSPD">
         <img src="https://i.ytimg.com/vi/WCFCk238L8M/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/WCFCk238L8M/hqdefault.jpg'">
@@ -889,6 +895,13 @@ Note:</pre></div>
         <button class="btn p" type="button" data-promo-giu>Vedi i bandi ↓</button>
       </div>
     </section>
+    <ol class="percorso rivela">
+      <li><b>1</b><span>Leggi il bando</span><small>Requisiti e scadenze</small></li>
+      <li><b>2</b><span>Studia il manuale</span><small>Le verifiche di capitolo aiutano</small></li>
+      <li><b>3</b><span>Candidatura online</span><small>Arriva subito al Comando</small></li>
+      <li><b>4</b><span>Colloquio H.R.</span><small>Con le Risorse Umane</small></li>
+      <li><b>5</b><span>Accademia</span><small>Da Recluta ad Agente I</small></li>
+    </ol>
     <div class="esiti-cand" id="esiti-cand" hidden></div>
     <div class="bandi-lista" id="bandi-lista"></div>
     <div class="candidatura" id="candidatura" hidden></div>
@@ -940,6 +953,15 @@ Note:</pre></div>
 </section>
 
 </main>
+
+<!-- video di presentazione dei bandi -->
+<div class="promo-modale" id="promo-modale" hidden role="dialog" aria-modal="true" aria-label="Video di presentazione">
+  <div class="pm-box">
+    <div class="pm-testa"><div><small>Video di presentazione · Reclutamento</small><b>They want <span>you</span></b></div><button class="pm-x" type="button" data-pm-chiudi aria-label="Chiudi">✕</button></div>
+    <div class="pm-video" id="pm-video"></div>
+    <div class="pm-az"><span>NOW v4 · Los Santos Police Department</span><button class="btn ghost" type="button" data-pm-chiudi>Salta</button><button class="btn p" type="button" data-pm-chiudi>Vai ai bandi →</button></div>
+  </div>
+</div>
 
 <!-- foto a tutto schermo -->
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Foto"><button class="lb-x" type="button" data-lb="chiudi" aria-label="Chiudi">✕</button><button class="lb-nav prec" type="button" data-lb="prec" aria-label="Foto precedente">‹</button><figure><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption></figure><button class="lb-nav succ" type="button" data-lb="succ" aria-label="Foto successiva">›</button></div>
