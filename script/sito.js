@@ -1245,7 +1245,7 @@
   });
 
   /* ═════════════ REPARTI · H.S.U. e MARY (solo membri: i testi stanno nell'archivio protetto) ═════════════ */
-  const REPARTI = { hsu: ['H.S.U.', '🚓', 'High Speed Unit', '#22d3ee'], mary: ['MARY', '🏍️', 'Unità motociclistica', '#ff9f43'] };
+  const REPARTI = { hsu: ['H.S.U.', '🚓', 'High Speed Unit', '#22d3ee'], mary: ['MARY', '🏍️', 'Unità motociclistica', '#ff9f43'], asd: ['A.S.D.', '🚁', 'Air Support Division', '#a78bfa'] };
   const REP = { id: 'hsu', scheda: 'comunicazioni', dati: {}, membri: [], corsi: [], miei: [], caricato: false, corso: null };
   const puoScrivereCom = sez => ACC.stato === 'comandante' || (sez !== 'accademia' && REP.miei.includes(sez));
   const gestisco = r => ACC.stato === 'comandante' || REP.miei.includes(r);
