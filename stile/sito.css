@@ -1533,6 +1533,9 @@ body[data-defcon="2"]:after,body[data-defcon="1"]:after{box-shadow:inset 0 0 200
 .ag-link:hover{background:rgba(30,107,255,.18)}
 .nav a.nav-area{color:var(--blu-chiaro)}
 
+.cmd-grado{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--tenue)}
+.cmd-grado select{flex:1;background:var(--notte);border:1px solid var(--linea2);color:var(--testo);border-radius:10px;padding:7px 10px;font:inherit;color-scheme:dark}
+
 /* ════════ FOTO LSPD ════════ */
 .hero-foto{position:absolute;inset:0;z-index:0}
 .hero-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity 1.8s ease,transform 8s ease}

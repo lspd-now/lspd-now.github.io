@@ -1790,6 +1790,7 @@
     return `<p class="intro-s">Chi entra con Discord dice se fa parte della LSPD e manda uno screen. Se approvi, gli si apre tutto il sito; gli esterni e chi è in attesa vedono solo Bandi e Manuale.</p>
       <div class="cmd-ver">${L.map(x => `<article class="cmd-v" style="--sc:${COL[x.stato] || 'var(--blu)'}">
         <div class="cmd-v-t"><img src="${esc(x.avatar || avatarBase(x.discord_id || '0'))}" alt="" data-base="${esc(avatarBase(x.discord_id || '0'))}"><div><b>${esc(x.nome || x.discord_nome || '—')}</b><small>${esc(x.discord_nome || '')}${x.discord_id ? ` · <a href="https://discord.com/users/${esc(x.discord_id)}" target="_blank" rel="noopener">profilo Discord</a>` : ''}</small></div><span class="pill st">${esc(NOMI[x.stato] || x.stato)}</span></div>
+        ${x.stato === 'approvato' ? `<label class="cmd-grado"><span>Grado nella LSPD</span><select data-mgrado="${esc(x.user_id)}"><option value="">—</option>${GRADI_LISTA.map(g => `<option${g === x.grado ? ' selected' : ''}>${esc(g)}</option>`).join('')}</select></label>` : ''}
         <div class="cmd-v-g">${x.grado ? `Grado dichiarato: <b>${esc(x.grado)}</b> · ` : ''}${quando(x.aggiornato || x.creato)}${x.verificato_da ? ` · verificato da ${esc(x.verificato_da)}` : ''}</div>
         ${x._url ? `<a class="cmd-v-img" href="${esc(x._url)}" target="_blank" rel="noopener"><img src="${esc(x._url)}" alt="Screen di verifica" loading="lazy"><span>Apri lo screen ↗</span></a>` : x.stato !== 'esterno' ? '<div class="cmd-v-noimg">Nessuno screen</div>' : ''}
         ${x.stato !== 'esterno' ? `<form class="cmd-v-az" data-uid="${esc(x.user_id)}"><input name="nota" maxlength="200" value="${esc(x.nota || '')}" placeholder="Nota (es. motivo del rifiuto)"><button class="btn verde piccolo" type="submit" value="approvato">✓ Approva</button><button class="btn rosso piccolo" type="submit" value="rifiutato">✗ Rifiuta</button></form>` : ''}
@@ -1928,6 +1929,13 @@
   const filtroCmd = el => { C[el.dataset.cf] = el.value; const testo = el.tagName === 'INPUT', pos = testo ? el.selectionStart : 0; renderScheda(); if (testo) { const n = $(`[data-cf="${el.dataset.cf}"]`, cmdEl); n.focus(); n.setSelectionRange(pos, pos); } };
   cmdEl.addEventListener('input', e => { if (e.target.matches('input[data-cf]')) filtroCmd(e.target); });
   cmdEl.addEventListener('change', e => { if (e.target.matches('select[data-cf]')) filtroCmd(e.target); });
+  cmdEl.addEventListener('change', async e => {
+    const s = e.target.closest('[data-mgrado]'); if (!s) return;
+    const sb = await db(); const { error } = await sb.from(T('membri')).update({ grado: s.value || null }).eq('user_id', s.dataset.mgrado);
+    if (error) { toast('Grado non salvato: ' + error.message, 'ko'); return; }
+    const x = C.membri.find(y => y.user_id === s.dataset.mgrado); if (x) x.grado = s.value || null;
+    toast(`Grado aggiornato: ${s.value || 'nessuno'} ✓ ${/^recluta/i.test(s.value) || !s.value ? '' : '· ora vede l\'Area LSPD'}`, 'ok');
+  });
   cmdEl.addEventListener('submit', async e => {
     e.preventDefault();
     if (e.target.id === 'cmd-bando') return salvaBando(e.target);
@@ -2001,7 +2009,7 @@
     $$('.nav a[data-v]').forEach(a => a.classList.toggle('chiuso', !puoVedere(a.dataset.v)));
     $$('a.cat, a.cap-a.esa').forEach(c => c.classList.toggle('chiuso', !puoVedere(risolvi(c.getAttribute('href').slice(1)).v)));
     const nc = $('.nav-cmd'); if (nc) nc.hidden = !(ACC.stato === 'comandante' || ACC.stato === 'aperto');
-    const na = $('.nav-area'); if (na) na.hidden = !(DB_ATTIVO && sonoAgente());
+    const na = $('.nav-area'); if (na) na.hidden = !(DB_ATTIVO && ['membro', 'comandante'].includes(ACC.stato));
     const al = $('#ag-link'); if (al) al.hidden = !(DB_ATTIVO && sonoAgente());
     if (vista === 'area') areaAgenti();
     renderChip(); mostraDefcon(); if (ACC.utente) { contaComunicazioni(); contaAppAgenti(); }
