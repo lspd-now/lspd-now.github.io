@@ -1448,6 +1448,16 @@
     aggiornaProssima(); rivela(); segnaComLette();
   }
 
+  /* ── video promozionale: YouTube si carica solo quando si preme play ── */
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-promo-giu]')) { $('#bandi-lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    const v = e.target.closest('[data-yt]'); if (!v) return;
+    const f = document.createElement('iframe');
+    f.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.dataset.yt)}?autoplay=1&rel=0&modestbranding=1`;
+    f.title = 'They Want You · NOW v4 LSPD'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true;
+    f.className = 'promo-frame'; v.replaceWith(f);
+  });
+
   /* ═════════════ AREA COMANDO (accesso con Discord) ═════════════ */
   const STATI_C = ['Nuova', 'In valutazione', 'Colloquio fissato', 'Accettata', 'Respinta'];
   const COL_STATO = { 'Nuova': 'var(--blu-chiaro)', 'In valutazione': 'var(--giallo)', 'Colloquio fissato': '#a78bfa', 'Accettata': 'var(--verde)', 'Respinta': 'var(--rosso)' };

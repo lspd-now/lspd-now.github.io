@@ -1379,6 +1379,23 @@ body[data-defcon="2"]:after,body[data-defcon="1"]:after{box-shadow:inset 0 0 200
 .rep-banner span{font:700 12px var(--f-mono);letter-spacing:.14em;color:var(--rc)}
 .rep-banner b{font:900 30px/1 var(--f-titolo);text-transform:uppercase}
 
+/* ════════ VIDEO PROMOZIONALE ════════ */
+.promo{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;align-items:center;margin:22px 0 26px;padding:18px;border-radius:24px;background:linear-gradient(135deg,rgba(30,107,255,.12),rgba(255,59,59,.08)),var(--pannello);border:1px solid var(--linea2);position:relative;overflow:hidden}
+.promo:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--sirena)}
+.promo-video,.promo-frame{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:16px;overflow:hidden;background:#000;padding:0;cursor:pointer;box-shadow:0 24px 60px -24px rgba(30,107,255,.8)}
+.promo-video img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.8,.2,1),filter .5s;filter:saturate(.95) brightness(.85)}
+.promo-video:hover img{transform:scale(1.05);filter:saturate(1.1) brightness(1)}
+.promo-play{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;display:grid;place-items:center;background:rgba(255,59,59,.92);box-shadow:0 0 0 0 rgba(255,59,59,.6);animation:promo-pulsa 2s ease-out infinite;transition:transform .3s}
+.promo-video:hover .promo-play{transform:scale(1.1)}
+.promo-play svg{width:38px;height:38px;fill:#fff;margin-left:5px}
+@keyframes promo-pulsa{0%{box-shadow:0 0 0 0 rgba(255,59,59,.6)}100%{box-shadow:0 0 0 26px rgba(255,59,59,0)}}
+.promo-testo small{font:700 12px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--rosso)}
+.promo-testo h2{margin:6px 0 10px;font:900 clamp(34px,4.5vw,58px)/.95 var(--f-titolo);text-transform:uppercase}
+.promo-testo h2 span{background:linear-gradient(90deg,var(--blu),var(--rosso));-webkit-background-clip:text;background-clip:text;color:transparent}
+.promo-testo p{color:#cfd9f5;margin:0 0 16px}
+@media (max-width:900px){.promo{grid-template-columns:1fr;padding:12px}}
+@media (prefers-reduced-motion:reduce){.promo-play{animation:none}}
+
 /* ════════ FOTO LSPD ════════ */
 .hero-foto{position:absolute;inset:0;z-index:0}
 .hero-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity 1.8s ease,transform 8s ease}
