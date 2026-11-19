@@ -273,7 +273,7 @@
   }
 
   /* ═════════════ VISTE E NAVIGAZIONE ═════════════ */
-  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), accademia: $('#v-accademia'), reparti: $('#v-reparti'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
+  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), appuntamenti: $('#v-appuntamenti'), accademia: $('#v-accademia'), reparti: $('#v-reparti'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
   let vista = null;
   function risolvi(h) {
     if (!h || h === 'top' || h === 'home') return { v: 'home' };
@@ -288,6 +288,8 @@
     if (h === 'attestato') return { v: 'esami', attestato: true };
     if (h === 'comando') return { v: 'comando' };
     if (h === 'accademia') return { v: 'accademia' };
+    if (h === 'appuntamenti') return { v: 'appuntamenti' };
+    if (h.startsWith('appuntamento-')) return { v: 'appuntamenti', tipo: h.slice(13) };
     if (h === 'reparti') return { v: 'reparti' };
     if (h.startsWith('reparto-')) return { v: 'reparti', rep: h.slice(8) };
     if (h.startsWith('esame-')) return { v: 'esami', esame: h.slice(6) };
@@ -335,6 +337,7 @@
     if (r.v === 'home') aggiornaBandiHome();
     if (r.v === 'comando') areaComando();
     if (r.v === 'accademia') accademia();
+    if (r.v === 'appuntamenti') appuntamenti(r.tipo);
     if (r.v === 'reparti') reparti(r.rep);
     if (!scorso && cambia) scrollTo({ top: 0, ...SALTA });
     rivela(); scorri();
@@ -1485,12 +1488,191 @@
     f.referrerPolicy = 'strict-origin-when-cross-origin'; f.className = 'promo-frame'; v.replaceWith(f);
   });
 
+  /* ═════════════ APPUNTAMENTI DEI CITTADINI ═════════════ */
+  const TIPI_APP = [
+    ['denuncia', '📝', 'Denuncia o querela', 'Segnalare un reato o un fatto illecito che hai subito o visto.', 'Agente di turno'],
+    ['superiore', '🎖️', 'Colloquio con un superiore', 'Parlare con un graduato: dal Sergente fino al Capo della Polizia.', 'Capitano'],
+    ['pda', '🔫', "Porto d'armi (PDA)", 'Richiesta del porto d\'armi: costo $10.000, validità un mese.', 'Agente di turno'],
+    ['restituzione', '🚗', 'Restituzione beni o veicoli', 'Ritiro di oggetti o veicoli sequestrati o ritrovati.', 'Agente di turno'],
+    ['arresto', '⚖️', 'Informazioni su un arresto', 'Notizie su un fermo o un arresto di un familiare o conoscente.', 'Sergente'],
+    ['reclamo', '📣', 'Reclamo su un agente', 'Segnalare il comportamento di un agente: lo gestiscono le Risorse Umane.', 'Risorse Umane (H.R.)'],
+    ['testimonianza', '🕵️', 'Testimonianza o informazioni', 'Fornire informazioni utili a un\'indagine in corso.', 'C.I.D.'],
+    ['orientamento', '🎓', "Entrare nell'LSPD", 'Informazioni su bandi, requisiti e Accademia.', 'Risorse Umane (H.R.)'],
+    ['documenti', '📄', 'Copia di documenti', 'Copia di denunce, verbali o rapporti che ti riguardano.', 'Agente di turno'],
+    ['altro', '💬', 'Altra richiesta', 'Qualsiasi altra richiesta al Dipartimento.', 'Agente di turno'],
+  ];
+  const CON_CHI = ['Agente di turno', 'Sergente', 'Tenente', 'Capitano', 'Comandante', 'Vice Capo della Polizia', 'Capo della Polizia', 'Risorse Umane (H.R.)', 'C.I.D.', 'S.W.A.T.', 'H.S.U.', 'MARY', 'A.S.D.'];
+  const FASCE_APP = ['Mattina (10:00 - 13:00)', 'Pomeriggio (14:00 - 18:00)', 'Sera (18:00 - 22:00)', 'Notte (22:00 - 02:00)', 'Qualsiasi orario'];
+  // campi in più per ogni tipo: [chiave, etichetta, tipo, segnaposto]
+  const EXTRA_APP = {
+    denuncia: [['Quando è successo', 'quando', 'datetime-local'], ['Dove', 'dove', 'text', 'es. Vinewood, davanti al Galaxy'], ['Persone coinvolte', 'persone', 'text', 'Nomi o descrizioni, se li conosci'], ['Danni o oggetti', 'danni', 'text', 'es. veicolo danneggiato, telefono rubato']],
+    superiore: [['Argomento del colloquio', 'argomento', 'text', 'es. proposta di collaborazione, problema con un servizio']],
+    pda: [['Ho superato la maggiore età', 'maggiorenne', 'check'], ['Ho la fedina penale pulita', 'fedina', 'check'], ['Ho la visita medica certificata', 'visita', 'check'], ['Ho il certificato balistico', 'balistico', 'check'], ['Posso pagare $10.000 al rilascio', 'costo', 'check']],
+    restituzione: [['Cosa devi ritirare', 'cosa', 'text', 'es. veicolo, arma, oggetti personali'], ['Targa o numero di pratica', 'riferimento', 'text', 'se lo conosci']],
+    arresto: [['Persona fermata o arrestata', 'persona', 'text', 'Nome e cognome'], ['Quando, più o meno', 'quando', 'datetime-local']],
+    reclamo: [['Agente coinvolto', 'agente', 'text', 'Nome, grado o matricola, se li conosci'], ['Quando è successo', 'quando', 'datetime-local'], ['Dove', 'dove', 'text']],
+    testimonianza: [['A cosa si riferisce', 'caso', 'text', 'es. rapina al Fleeca di ieri sera'], ['Quando hai visto i fatti', 'quando', 'datetime-local']],
+    documenti: [['Quale documento', 'documento', 'text', 'es. copia della denuncia n° 12'], ['Numero o data', 'riferimento', 'text']],
+  };
+  let APP = { tipo: null };
+  const mieiApp = () => LS.get('lspd-appuntamenti', []);
+  const codiceApp = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b = new Uint8Array(5); crypto.getRandomValues(b); return 'PD-A-' + [...b].map(x => c[x % c.length]).join(''); };
+  function appuntamenti(tipo) {
+    if (!$('#app-tipi')) return;
+    if (tipo && TIPI_APP.some(t => t[0] === tipo)) APP.tipo = tipo;
+    $('#app-tipi').innerHTML = TIPI_APP.map(([k, e, t, d, c]) => `<button type="button" class="app-t${APP.tipo === k ? ' on' : ''}" data-app="${k}"><span>${e}</span><b>${esc(t)}</b><small>${esc(d)}</small><em>Con: ${esc(c)}</em></button>`).join('');
+    renderModuloApp(); renderMieiApp(); areaAgenti();
+  }
+  function renderModuloApp() {
+    const box = $('#app-modulo'); if (!box) return;
+    if (!APP.tipo) { box.innerHTML = '<p class="intro-s" style="text-align:center;margin:20px 0 60px">Scegli qui sopra il tipo di appuntamento per aprire il modulo.</p>'; return; }
+    const [k, e, t, , c] = TIPI_APP.find(x => x[0] === APP.tipo), u = ACC.utente, oggi = new Date().toISOString().slice(0, 10);
+    const campo = ([lab, n, tp, ph]) => tp === 'check' ? `<label class="app-chk"><input type="checkbox" name="x-${n}"> ${esc(lab)}</label>` : `<label class="campo${tp === 'text' ? ' largo' : ''}"><span>${esc(lab)}</span><input name="x-${n}" type="${tp}" maxlength="200" ${ph ? `placeholder="${esc(ph)}"` : ''}></label>`;
+    box.innerHTML = `<form class="riquadro app-form rivela vis" id="app-form" novalidate>
+      <div class="app-form-t"><span>${e}</span><div><small>Passo 2 · Modulo</small><h3>${esc(t)}</h3></div><button type="button" class="btn piccolo ghost" data-app-cambia>Cambia tipo</button></div>
+      <h4>Chi sei</h4>
+      <div class="form-griglia">
+        <label class="campo"><span>Nome e cognome <em>*</em></span><input name="nome" maxlength="60" required placeholder="Del tuo personaggio"></label>
+        <label class="campo"><span>Data di nascita</span><input name="nascita" maxlength="20" placeholder="es. 12/04/1998"></label>
+        <label class="campo"><span>Numero di telefono</span><input name="telefono" maxlength="20" inputmode="tel" placeholder="Numero in città"></label>
+        <label class="campo"><span>Nome Discord</span><input name="discord" maxlength="40" value="${esc(u?.nome || '')}" placeholder="es. @mario.rossi"></label>
+        <label class="campo largo"><span>ID Discord <em>*</em></span><input name="did" inputmode="numeric" maxlength="20" value="${esc(u?.id || '')}" placeholder="es. 123456789012345678"><small>Serve per vedere qui la risposta. Lo trovi su Discord: Impostazioni → Avanzate → Modalità sviluppatore, poi tasto destro sul tuo nome → «Copia ID utente».</small></label>
+      </div>
+      <h4>L'appuntamento</h4>
+      <div class="form-griglia">
+        <label class="campo"><span>Con chi vuoi parlare <em>*</em></span><select name="con_chi">${CON_CHI.map(x => `<option${x === c ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></label>
+        <label class="campo"><span>Giorno preferito</span><input type="date" name="giorno" min="${oggi}"></label>
+        <label class="campo"><span>Fascia oraria</span><select name="fascia">${FASCE_APP.map(x => `<option>${esc(x)}</option>`).join('')}</select></label>
+        <label class="campo"><span>Altre disponibilità</span><input name="alternative" maxlength="200" placeholder="es. tutti i giorni dopo le 21"></label>
+        <label class="app-chk largo"><input type="checkbox" name="urgente"> È urgente (non un'emergenza: per quelle c'è il 911)</label>
+      </div>
+      ${(EXTRA_APP[k] || []).length ? `<h4>${k === 'pda' ? 'Requisiti del porto d\'armi (art. 7.4)' : 'Dettagli'}</h4><div class="form-griglia">${EXTRA_APP[k].map(campo).join('')}</div>` : ''}
+      <h4>Il motivo</h4>
+      <label class="campo largo"><span>${k === 'denuncia' ? 'Descrivi l\'accaduto' : 'Spiega la tua richiesta'} <em>*</em></span><textarea name="motivo" rows="5" maxlength="2000" required placeholder="${k === 'denuncia' ? 'Cosa è successo, in ordine, con tutti i dettagli che ricordi.' : 'Scrivi tutto quello che serve al Dipartimento per prepararsi.'}"></textarea></label>
+      <label class="app-chk largo"><input type="checkbox" name="vero"> Dichiaro che le informazioni sono vere: le false dichiarazioni e le false denunce sono reati.</label>
+      <div class="cand-invia"><small>La richiesta arriva al Comando LSPD. Riceverai un codice pratica: con il tuo ID Discord vedi qui conferma, giorno, ora e agente.</small><button class="btn p" type="submit">📅 Invia la richiesta</button></div>
+    </form>`;
+  }
+  async function renderMieiApp() {
+    const box = $('#app-miei'); if (!box) return;
+    const L = mieiApp();
+    box.innerHTML = `<details class="esiti-cand app-miei rivela vis"${L.length ? ' open' : ''}><summary>📅 ${L.length ? `I miei appuntamenti (${L.length})` : 'Hai già chiesto un appuntamento? Controlla la risposta'}</summary>
+      <div class="app-lista">${L.map(a => `<div class="app-esito" data-prot="${esc(a.protocollo)}"><div><code>${esc(a.protocollo)}</code><b>${esc(a.tipo)}</b><small>Inviata il ${dataIt(new Date(a.data))}</small></div><span class="app-stato">Carico…</span></div>`).join('')}</div>
+      <form class="form-griglia" id="app-cerca" novalidate><label class="campo"><span>Codice pratica</span><input name="prot" maxlength="12" placeholder="es. PD-A-8K2PQ" autocapitalize="characters"></label><label class="campo"><span>ID Discord</span><input name="did" inputmode="numeric" maxlength="20" placeholder="Il tuo ID Discord"></label><button class="btn" type="submit">Controlla</button></form>
+    </details>`;
+    for (const a of L) mostraEsitoApp(a.protocollo, a.discordId);
+  }
+  async function esitoApp(prot, did) {
+    try { const sb = await db(); if (!sb) return null; const { data, error } = await sb.rpc(T('esito_appuntamento'), { p_protocollo: prot, p_discord: did }); if (error) return null; return Array.isArray(data) ? (data[0] || null) : (data && typeof data === 'object' ? data : null); } catch { return null; }
+  }
+  const COL_APP = { Ricevuto: 'var(--giallo)', Confermato: 'var(--verde)', Rifiutato: 'var(--rosso)', Completato: 'var(--blu-chiaro)', Annullato: '#8a96b6' };
+  async function mostraEsitoApp(prot, did, box) {
+    box = box || $(`.app-esito[data-prot="${prot}"] .app-stato`); if (!box) return;
+    const r = await esitoApp(prot, did);
+    if (!r) { box.innerHTML = '<em class="pill st" style="--sc:var(--giallo)">In attesa</em>'; return; }
+    box.innerHTML = `<em class="pill st" style="--sc:${COL_APP[r.stato] || 'var(--blu)'}">${esc(r.stato === 'Ricevuto' ? 'Ricevuta · in attesa' : r.stato)}</em>${r.stato === 'Confermato' && r.confermato_per ? `<b class="app-quando">📅 ${esc(dataB(r.confermato_per))}${r.assegnato ? ` · con ${esc(r.assegnato)}` : r.con_chi ? ` · ${esc(r.con_chi)}` : ''}</b>` : ''}${r.messaggio ? `<p>💬 ${esc(r.messaggio)}</p>` : ''}`;
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-app]'); if (t) { APP.tipo = t.dataset.app; appuntamenti(); $('#app-modulo').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    if (e.target.closest('[data-app-cambia]')) { $('#app-tipi').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  });
+  document.addEventListener('submit', async e => {
+    if (e.target.id === 'app-cerca') {
+      e.preventDefault(); const f = new FormData(e.target), prot = String(f.get('prot') || '').trim().toUpperCase(), did = String(f.get('did') || '').trim();
+      if (!/^PD-A-[A-Z0-9]{5}$/.test(prot) || !/^\d{17,20}$/.test(did)) { toast('Controlla codice pratica (PD-A-…) e ID Discord', 'ko'); return; }
+      const L = mieiApp(); if (!L.some(a => a.protocollo === prot)) { L.unshift({ protocollo: prot, discordId: did, tipo: 'Appuntamento', data: Date.now() }); LS.set('lspd-appuntamenti', L.slice(0, 20)); }
+      renderMieiApp(); return;
+    }
+    if (e.target.id !== 'app-form') return; e.preventDefault();
+    const f = e.target, g = n => String(f[n]?.value || '').trim(), [k, , tit] = TIPI_APP.find(x => x[0] === APP.tipo);
+    if (g('nome').length < 2) { toast('Scrivi nome e cognome', 'ko'); f.nome.focus(); return; }
+    if (!/^\d{17,20}$/.test(g('did'))) { toast('L\'ID Discord è un numero di 17-20 cifre', 'ko'); f.did.focus(); return; }
+    if (g('motivo').length < 10) { toast('Spiega la richiesta in almeno qualche parola', 'ko'); f.motivo.focus(); return; }
+    if (k === 'pda' && EXTRA_APP.pda.some(([, n]) => !f['x-' + n].checked)) { toast('Per il porto d\'armi servono tutti i requisiti dell\'art. 7.4', 'ko'); return; }
+    if (!f.vero.checked) { toast('Conferma che le informazioni sono vere', 'ko'); return; }
+    const dettagli = {}; for (const [lab, n, tp] of EXTRA_APP[k] || []) { const el = f['x-' + n]; const v = tp === 'check' ? el.checked : String(el.value || '').trim(); if (v !== '' && v !== false) dettagli[lab] = tp === 'datetime-local' && v ? dataB(v) : v; }
+    const protocollo = codiceApp();
+    const riga = { protocollo, tipo: tit, con_chi: g('con_chi'), nome: g('nome'), nascita: g('nascita') || null, telefono: g('telefono') || null, discord: g('discord') || null, discord_id: g('did'), giorno: g('giorno') || null, fascia: g('fascia'), alternative: g('alternative') || null, urgente: f.urgente.checked, motivo: g('motivo'), dettagli };
+    const btn = $('button[type="submit"]', f); btn.disabled = true;
+    let errore = 'L\'archivio non risponde: riprova tra poco.';
+    try { const sb = await db(); if (sb) { const { error } = await sb.from(T('appuntamenti')).insert(riga); errore = error ? error.message : ''; } } catch {}
+    if (errore) { btn.disabled = false; toast('Richiesta non inviata: ' + errore, 'ko'); return; }
+    const L = mieiApp(); L.unshift({ protocollo, discordId: g('did'), tipo: tit, data: Date.now() }); LS.set('lspd-appuntamenti', L.slice(0, 20));
+    $('#app-modulo').innerHTML = `<div class="riquadro app-ok rivela vis"><span class="app-ok-i">✓</span><small>Richiesta inviata</small><h3>Il tuo codice pratica</h3><code class="app-cod">${esc(protocollo)}</code><p>Conservalo. Quando il Comando conferma, in questa pagina vedi <b>giorno, ora e agente</b>. Presentati al desk della centrale di Mission Row solo dopo la conferma.</p><div class="esito-az" style="justify-content:center"><button class="btn" type="button" data-copia-prot="${esc(protocollo)}">📋 Copia il codice</button><a class="btn ghost" href="#home">Torna alla home</a></div></div>`;
+    APP.tipo = null; $$('.app-t').forEach(b => b.classList.remove('on')); renderMieiApp(); coriandoli();
+    $('#app-modulo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  /* ── Area LSPD: gli agenti da Agente I in su accettano gli appuntamenti operativi (non i colloqui con un superiore) ── */
+  const SUPERIORE = 'Colloquio con un superiore';
+  const sonoAgente = () => ACC.stato === 'comandante' || (ACC.stato === 'membro' && !!ACC.riga?.grado && !/^recluta/i.test(ACC.riga.grado));
+  const mioNomeAg = () => [ACC.riga?.grado, ACC.riga?.nome || ACC.utente?.nome].filter(Boolean).join(' ');
+  const AG = { lista: [], aperta: LS.get('lspd-ag-aperta', true), filtro: 'nuovi' };
+  async function caricaAgenti() {
+    try { const sb = await db(); const { data } = await sb.from(T('appuntamenti')).select('*').order('creato', { ascending: false }).limit(300); AG.lista = (data || []).filter(x => x.tipo !== SUPERIORE); } catch { AG.lista = []; }
+  }
+  let appContati = false;
+  async function contaAppAgenti() {
+    if (appContati || !DB_ATTIVO || !sonoAgente()) return; appContati = true;
+    await caricaAgenti(); badgeApp();
+  }
+  function badgeApp() { const n = AG.lista.filter(x => x.stato === 'Ricevuto').length, b = $('#nav-app'); if (b) { b.hidden = !n; b.textContent = n; } }
+  async function areaAgenti() {
+    const box = $('#app-area'); if (!box) return;
+    if (!DB_ATTIVO || !sonoAgente()) { box.innerHTML = ''; return; }
+    await caricaAgenti(); badgeApp(); renderAgenti();
+  }
+  function renderAgenti() {
+    const box = $('#app-area'); if (!box) return;
+    const me = mioNomeAg(), COLA = { Ricevuto: 'var(--giallo)', Confermato: 'var(--verde)', Rifiutato: 'var(--rosso)', Completato: 'var(--blu-chiaro)', Annullato: '#8a96b6' };
+    const F = { nuovi: x => x.stato === 'Ricevuto', miei: x => me && (x.assegnato || '').includes(ACC.riga?.nome || ACC.utente?.nome || '§'), confermati: x => x.stato === 'Confermato', tutti: () => true };
+    const L = AG.lista.filter(F[AG.filtro] || F.nuovi), nuovi = AG.lista.filter(F.nuovi).length;
+    const loc = s => { if (!s) return ''; const d = new Date(s), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; };
+    const det = d => Object.entries(d || {}).filter(([, v]) => v !== '' && v != null && v !== false).map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v === true ? 'Sì' : v)}</b></div>`).join('');
+    box.innerHTML = `<section class="ag-area rivela vis">
+      <button type="button" class="ag-testa" data-ag-apri aria-expanded="${AG.aperta}"><span class="ag-ico">🛡️</span><span><small>Area LSPD · da Agente I al Capo della Polizia</small><b>Appuntamenti dei cittadini</b><em>Accetta una richiesta, fissa giorno e ora: il cittadino vede la conferma con il tuo nome.</em></span>${nuovi ? `<i class="ag-n">${nuovi} ${nuovi === 1 ? 'nuovo' : 'nuovi'}</i>` : '<i class="ag-n zero">Nessuno nuovo</i>'}<span class="ag-freccia">${AG.aperta ? '▲' : '▼'}</span></button>
+      ${AG.aperta ? `<div class="ag-corpo">
+        <div class="cp-filtri">${[['nuovi', `Da accettare (${nuovi})`], ['miei', 'Accettati da me'], ['confermati', 'Confermati'], ['tutti', 'Tutti']].map(([k, t]) => `<button type="button" class="cp-f${AG.filtro === k ? ' on' : ''}" data-ag-f="${k}">${t}</button>`).join('')}<button type="button" class="cp-f" data-ag-agg>↻ Aggiorna</button></div>
+        <p class="intro-s" style="margin:8px 0 0">Qui vedi solo le richieste operative: i colloqui con un superiore li gestisce il Comando.</p>
+        <div class="ag-lista">${L.map(x => `<article class="cmd-v ag-app" style="--sc:${COLA[x.stato] || 'var(--blu)'}">
+          <div class="cmd-v-t"><span class="app-tipo-ico">${esc((TIPI_APP.find(t => t[2] === x.tipo) || ['', '💬'])[1])}</span><div><b>${esc(x.tipo)}${x.urgente ? ' · <span style="color:var(--rosso)">URGENTE</span>' : ''}</b><small><code>${esc(x.protocollo)}</code> · ${quando(x.creato)}${x.assegnato ? ` · 👮 ${esc(x.assegnato)}` : ''}</small></div><span class="pill st" style="--sc:${COLA[x.stato]}">${esc(x.stato)}</span></div>
+          <div class="app-dati"><div><small>Cittadino</small><b>${esc(x.nome)}</b></div><div><small>Telefono</small><b>${esc(x.telefono || '—')}</b></div><div><small>Preferenza</small><b>${x.giorno ? dataIt(new Date(x.giorno)) : 'Qualsiasi giorno'} · ${esc(x.fascia || '')}</b></div>${x.alternative ? `<div class="largo"><small>Altre disponibilità</small><b>${esc(x.alternative)}</b></div>` : ''}${det(x.dettagli)}</div>
+          <p class="app-motivo">${esc(x.motivo)}</p>
+          <form class="ag-app-form" data-aid="${esc(x.id)}">
+            <label class="campo"><span>Stato</span><select name="stato">${['Confermato', 'Completato', 'Rifiutato', 'Ricevuto'].map(s => `<option${s === (x.stato === 'Ricevuto' ? 'Confermato' : x.stato) ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
+            <label class="campo"><span>Giorno e ora</span><input type="datetime-local" name="confermato_per" value="${esc(loc(x.confermato_per))}"></label>
+            <label class="campo"><span>Agente</span><input name="assegnato" maxlength="80" value="${esc(x.assegnato || me)}"></label>
+            <label class="campo largo"><span>Messaggio per il cittadino</span><input name="messaggio" maxlength="600" value="${esc(x.messaggio || '')}" placeholder="es. Presentati al desk con un documento"></label>
+            <div class="com-az">${x.gestito_da ? `<small class="lib-ctrl">Ultima modifica di ${esc(x.gestito_da)} · ${quando(x.aggiornato)}</small>` : ''}<button class="btn p piccolo" type="submit">${x.stato === 'Ricevuto' ? '✓ Accetto io' : 'Salva'}</button></div>
+          </form>
+        </article>`).join('') || `<p class="intro-s">${AG.filtro === 'nuovi' ? 'Nessuna richiesta da accettare in questo momento. 👍' : 'Nessun appuntamento in questo elenco.'}</p>`}</div>
+      </div>` : ''}
+    </section>`;
+  }
+  document.addEventListener('click', async e => {
+    if (e.target.closest('[data-ag-apri]')) { AG.aperta = !AG.aperta; LS.set('lspd-ag-aperta', AG.aperta); renderAgenti(); return; }
+    const f = e.target.closest('[data-ag-f]'); if (f) { AG.filtro = f.dataset.agF; renderAgenti(); return; }
+    if (e.target.closest('[data-ag-agg]')) { await areaAgenti(); toast('Appuntamenti aggiornati', 'ok'); }
+  });
+  document.addEventListener('submit', async e => {
+    const fa = e.target.closest('.ag-app-form'); if (!fa) return; e.preventDefault();
+    if (!sonoAgente()) return;
+    const f = new FormData(fa), q = k => String(f.get(k) || '').trim(), stato = q('stato'), quando = q('confermato_per');
+    if (stato === 'Confermato' && !quando) { toast('Per accettare scegli giorno e ora', 'ko'); return; }
+    if (stato === 'Confermato' && !q('assegnato')) { toast('Scrivi chi riceve il cittadino', 'ko'); return; }
+    const sb = await db(); const { error } = await sb.from(T('appuntamenti')).update({ stato, confermato_per: quando ? new Date(quando).toISOString() : null, assegnato: q('assegnato') || null, messaggio: q('messaggio') || null }).eq('id', fa.dataset.aid);
+    if (error) { toast('Non riuscito: ' + error.message, 'ko'); return; }
+    toast(stato === 'Confermato' ? '✓ Appuntamento accettato: il cittadino vede la conferma sul sito' : 'Appuntamento aggiornato ✓', 'ok');
+    await areaAgenti();
+  });
+
+  document.addEventListener('click', async e => { const c = e.target.closest('[data-copia-prot]'); if (c) toast((await copia(c.dataset.copiaProt)) ? 'Codice copiato' : 'Copia non riuscita', 'ok'); });
+
   /* ═════════════ AREA COMANDO (accesso con Discord) ═════════════ */
   const STATI_C = ['Nuova', 'In valutazione', 'Colloquio fissato', 'Accettata', 'Respinta'];
   const COL_STATO = { 'Nuova': 'var(--blu-chiaro)', 'In valutazione': 'var(--giallo)', 'Colloquio fissato': '#a78bfa', 'Accettata': 'var(--verde)', 'Respinta': 'var(--rosso)' };
   const ICO_DC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.099.246.198.373.292a.077.077 0 0 1-.007.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.331c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418z"/></svg>';
   const LUCCHETTO = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.6"/></svg>';
-  const C = { scheda: 'riepilogo', esiti: [], cand: [], membri: [], libretti: [], storico: [], utente: null, errore: '', fE: 'tutti', fR: 'tutti', qE: '', fS: 'tutti', qC: '', bando: null };
+  const C = { scheda: 'riepilogo', esiti: [], cand: [], membri: [], libretti: [], storico: [], app: [], fA: 'aperti', utente: null, errore: '', fE: 'tutti', fR: 'tutti', qE: '', fS: 'tutti', qC: '', bando: null };
   const cmdEl = $('#cmd');
   const quando = s => { const d = new Date(s); return isNaN(d) ? '—' : `${dataIt(d)} ${oraIt(d)}`; };
   const nomeEsame = id => { if (id === 'finale') return 'Esame d\'accademia'; const c = ESAMI.capitoli.find(x => x.id === id); return c ? `Cap. ${c.n} · ${c.titolo}` : id; };
@@ -1520,15 +1702,16 @@
   }
   async function caricaCmd(sb) {
     sb = sb || await db();
-    const [e, c, b, mb, lb, ls] = await Promise.all([
+    const [e, c, b, mb, lb, ls, ap] = await Promise.all([
       sb.from(T('esiti')).select('*').order('creato', { ascending: false }).limit(1000),
       sb.from(T('candidature')).select('*').order('creato', { ascending: false }).limit(500),
       sb.from(T('bandi')).select('*').order('ordine', { ascending: true }),
       sb.from(T('membri')).select('*').order('aggiornato', { ascending: false }).limit(500),
       sb.from(T('libretti')).select('*').order('salvato', { ascending: false }).limit(500),
       sb.from(T('libretti_storico')).select('*').order('creato', { ascending: true }).limit(5000),
+      sb.from(T('appuntamenti')).select('*').order('creato', { ascending: false }).limit(500),
     ]);
-    C.esiti = e.data || []; C.cand = c.data || []; C.membri = mb.data || []; C.libretti = lb.data || []; C.storico = ls.data || [];
+    C.esiti = e.data || []; C.cand = c.data || []; C.membri = mb.data || []; C.libretti = lb.data || []; C.storico = ls.data || []; C.app = ap.data || [];
     await Promise.all(C.membri.filter(x => x.screen && x.stato !== 'esterno').slice(0, 60).map(async x => { try { const { data } = await sb.storage.from(BUCKET).createSignedUrl(x.screen, 3600); x._url = data?.signedUrl || ''; } catch {} }));
     if (Array.isArray(b.data)) BANDI = b.data.map(r => normBando({ ...(r.dati || {}), id: r.id, ordine: r.ordine }));
     C.errore = [e.error, c.error, b.error, mb.error].filter(Boolean).map(x => x.message).join(' · ');
@@ -1540,13 +1723,13 @@
         <div class="cmd-az"><button class="btn piccolo" type="button" data-cmd="aggiorna">↻ Aggiorna</button><button class="btn piccolo ghost" type="button" data-cmd="esci">Esci</button></div>
       </div>
       ${C.errore ? `<p class="bc-nota" style="margin:0 0 14px">Alcuni dati non sono arrivati: ${esc(C.errore)}</p>` : ''}
-      <div class="schede cmd-schede" role="tablist">${[['riepilogo', 'Riepilogo'], ['esiti', `Esiti esami <span class="cnt">${C.esiti.length}</span>`], ['candidature', `Candidature${nuove ? ` <span class="cnt nuovo">${nuove} nuove</span>` : ''}`], ['verifiche', `Verifiche membri${daVer ? ` <span class="cnt nuovo">${daVer} da fare</span>` : ''}`], ['libretti', `Libretti${daCtrl ? ` <span class="cnt nuovo">${daCtrl} da controllare</span>` : ` <span class="cnt">${C.libretti.length}</span>`}`], ['bandi', `Bandi <span class="cnt">${BANDI.length}</span>`]].map(([k, t]) => `<button type="button" role="tab" data-cs="${k}" aria-selected="${C.scheda === k}">${t}</button>`).join('')}</div>
+      <div class="schede cmd-schede" role="tablist">${[['riepilogo', 'Riepilogo'], ['esiti', `Esiti esami <span class="cnt">${C.esiti.length}</span>`], ['candidature', `Candidature${nuove ? ` <span class="cnt nuovo">${nuove} nuove</span>` : ''}`], ['verifiche', `Verifiche membri${daVer ? ` <span class="cnt nuovo">${daVer} da fare</span>` : ''}`], ['appuntamenti', `Appuntamenti${C.app.filter(x => x.stato === 'Ricevuto').length ? ` <span class="cnt nuovo">${C.app.filter(x => x.stato === 'Ricevuto').length} da gestire</span>` : ` <span class="cnt">${C.app.length}</span>`}`], ['libretti', `Libretti${daCtrl ? ` <span class="cnt nuovo">${daCtrl} da controllare</span>` : ` <span class="cnt">${C.libretti.length}</span>`}`], ['bandi', `Bandi <span class="cnt">${BANDI.length}</span>`]].map(([k, t]) => `<button type="button" role="tab" data-cs="${k}" aria-selected="${C.scheda === k}">${t}</button>`).join('')}</div>
       <div id="cmd-corpo"></div>`;
     renderScheda();
   }
   function renderScheda() {
     const el = $('#cmd-corpo'); if (!el) return;
-    el.innerHTML = C.scheda === 'esiti' ? schedaEsiti() : C.scheda === 'candidature' ? schedaCandidature() : C.scheda === 'bandi' ? schedaBandi() : C.scheda === 'verifiche' ? schedaVerifiche() : C.scheda === 'libretti' ? schedaLibretti() : schedaRiepilogo();
+    el.innerHTML = C.scheda === 'esiti' ? schedaEsiti() : C.scheda === 'candidature' ? schedaCandidature() : C.scheda === 'bandi' ? schedaBandi() : C.scheda === 'verifiche' ? schedaVerifiche() : C.scheda === 'libretti' ? schedaLibretti() : C.scheda === 'appuntamenti' ? schedaAppuntamenti() : schedaRiepilogo();
   }
   const rigaEsito = e => `<div class="cmd-riga"><span class="pill ${e.superato ? 'si' : 'no'}">${e.superato ? 'Superato' : 'Non sup.'}</span><div><b>${esc(e.nome || '—')}</b><small>${esc(nomeEsame(e.esame))} · ${quando(e.creato)}</small></div><em>${e.percentuale ?? 0}%</em></div>`;
   const rigaCand = c => { const st = c.stato || 'Nuova'; return `<div class="cmd-riga"><span class="pill st" style="--sc:${COL_STATO[st] || 'var(--blu)'}">${esc(st)}</span><div><b>${esc(c.nome || '—')}</b><small>${esc(c.bando_titolo || c.bando_id || '')} · ${quando(c.creato)}</small></div></div>`; };
@@ -1646,6 +1829,33 @@
         ${x.controllato_da ? `<small class="lib-ctrl">Controllato da ${esc(x.controllato_da)} · ${quando(x.controllato)}</small>` : ''}
       </article>`; }).join('') || '<p class="intro-s">Nessuna recluta ha ancora salvato il libretto.</p>'}</div>`;
   }
+  function schedaAppuntamenti() {
+    const COLA = { Ricevuto: 'var(--giallo)', Confermato: 'var(--verde)', Rifiutato: 'var(--rosso)', Completato: 'var(--blu-chiaro)', Annullato: '#8a96b6' };
+    const aperti = x => ['Ricevuto', 'Confermato'].includes(x.stato);
+    const L = C.app.filter(x => C.fA === 'tutti' || (C.fA === 'aperti' ? aperti(x) : x.stato === C.fA)).sort((a, b) => (b.urgente === true) - (a.urgente === true) || (a.stato === 'Ricevuto' ? -1 : 0) - (b.stato === 'Ricevuto' ? -1 : 0));
+    const det = d => Object.entries(d || {}).filter(([, v]) => v !== '' && v != null && v !== false).map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v === true ? 'Sì' : v)}</b></div>`).join('');
+    const loc = s => { if (!s) return ''; const d = new Date(s), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; };
+    return `<p class="intro-s">Le richieste dei cittadini dalla pagina Appuntamenti. Conferma giorno, ora e agente: il cittadino lo vede sul sito con il suo codice pratica.</p>
+      <div class="cp-filtri" style="margin-bottom:12px">${[['aperti', 'Da gestire e confermati'], ['Ricevuto', 'Nuovi'], ['Confermato', 'Confermati'], ['Completato', 'Completati'], ['Rifiutato', 'Rifiutati'], ['tutti', 'Tutti']].map(([k, t]) => `<button type="button" class="cp-f${C.fA === k ? ' on' : ''}" data-fa="${k}">${t}</button>`).join('')}</div>
+      <div class="cmd-ver">${L.map(x => `<article class="cmd-v cmd-app" style="--sc:${COLA[x.stato] || 'var(--blu)'}">
+        <div class="cmd-v-t"><span class="app-tipo-ico">${esc((TIPI_APP.find(t => t[2] === x.tipo) || ['', '💬'])[1])}</span><div><b>${esc(x.tipo)}${x.urgente ? ' · <span style="color:var(--rosso)">URGENTE</span>' : ''}</b><small><code>${esc(x.protocollo)}</code> · ${quando(x.creato)}</small></div><span class="pill st" style="--sc:${COLA[x.stato]}">${esc(x.stato)}</span></div>
+        <div class="app-dati">
+          <div><small>Cittadino</small><b>${esc(x.nome)}</b></div><div><small>Nato il</small><b>${esc(x.nascita || '—')}</b></div><div><small>Telefono</small><b>${esc(x.telefono || '—')}</b></div>
+          <div><small>Discord</small><b>${esc(x.discord || '—')}${x.discord_id ? ` · <a href="https://discord.com/users/${esc(x.discord_id)}" target="_blank" rel="noopener">profilo</a>` : ''}</b></div>
+          <div><small>Con chi</small><b>${esc(x.con_chi || '—')}</b></div><div><small>Preferenza</small><b>${x.giorno ? dataIt(new Date(x.giorno)) : 'Qualsiasi giorno'} · ${esc(x.fascia || '')}</b></div>
+          ${x.alternative ? `<div class="largo"><small>Altre disponibilità</small><b>${esc(x.alternative)}</b></div>` : ''}${det(x.dettagli)}
+        </div>
+        <p class="app-motivo">${esc(x.motivo)}</p>
+        <form class="cmd-app-form" data-aid="${esc(x.id)}">
+          <label class="campo"><span>Stato</span><select name="stato">${['Ricevuto', 'Confermato', 'Completato', 'Rifiutato', 'Annullato'].map(s => `<option${s === x.stato ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
+          <label class="campo"><span>Giorno e ora</span><input type="datetime-local" name="confermato_per" value="${esc(loc(x.confermato_per))}"></label>
+          <label class="campo"><span>Con chi</span><input name="assegnato" maxlength="80" value="${esc(x.assegnato || '')}" placeholder="es. Cpt. Rossi"></label>
+          <label class="campo largo"><span>Messaggio per il cittadino</span><input name="messaggio" maxlength="600" value="${esc(x.messaggio || '')}" placeholder="es. Presentati al desk 10 minuti prima con un documento"></label>
+          <label class="campo largo"><span>Nota interna (non la vede il cittadino)</span><input name="nota" maxlength="600" value="${esc(x.nota || '')}"></label>
+          <div class="com-az">${x.gestito_da ? `<small class="lib-ctrl">Ultima modifica di ${esc(x.gestito_da)} · ${quando(x.aggiornato)}</small>` : ''}<button class="btn piccolo ghost" type="button" data-del-app="${esc(x.id)}">🗑</button><button class="btn p piccolo" type="submit">Salva</button></div>
+        </form>
+      </article>`).join('') || '<p class="intro-s">Nessun appuntamento in questo elenco.</p>'}</div>`;
+  }
   function schedaBandi() {
     if (C.bando) return editorBando(C.bando === 'nuovo' ? null : BANDI.find(b => b.id === C.bando));
     return `<div class="cmd-filtri"><button class="btn p" type="button" data-cmd="nuovo-bando">+ Nuovo bando</button><span class="intro-s" style="margin:0">Un bando nuovo resta «In preparazione» finché non premi «Avvia»: solo il Comando può aprirlo o disattivarlo.</span></div>
@@ -1705,6 +1915,8 @@
     const an = t.closest('[data-annuncio]'); if (an) { const b = BANDI.find(x => x.id === an.dataset.annuncio); toast((await copia(annuncio(b))) ? 'Annuncio copiato: incollalo su Discord' : 'Copia non riuscita', 'ok'); return; }
     const cc = t.closest('[data-copia-cand]'); if (cc) { const x = C.cand.find(y => String(y.id) === cc.dataset.copiaCand); toast((await copia(testoCand(x))) ? 'Candidatura copiata' : 'Copia non riuscita', 'ok'); return; }
     const d1 = t.closest('[data-del-esito]'); if (d1) return elimina('esiti', d1.dataset.delEsito, 'questo esito');
+    const fa2 = t.closest('[data-fa]'); if (fa2) { C.fA = fa2.dataset.fa; renderScheda(); return; }
+    const da = t.closest('[data-del-app]'); if (da) return elimina('appuntamenti', da.dataset.delApp, 'questo appuntamento');
     const d2 = t.closest('[data-del-cand]'); if (d2) return elimina('candidature', d2.dataset.delCand, 'questa candidatura');
     const d3 = t.closest('[data-del-bando]'); if (d3) return elimina('bandi', d3.dataset.delBando, 'questo bando');
   });
@@ -1714,6 +1926,15 @@
   cmdEl.addEventListener('submit', async e => {
     e.preventDefault();
     if (e.target.id === 'cmd-bando') return salvaBando(e.target);
+    const fa = e.target.closest('.cmd-app-form');
+    if (fa) {
+      const f = new FormData(fa), sb = await db(), q = k => String(f.get(k) || '').trim();
+      const quando = q('confermato_per');
+      if (q('stato') === 'Confermato' && !quando) { toast('Per confermare scegli giorno e ora', 'ko'); return; }
+      const { error } = await sb.from(T('appuntamenti')).update({ stato: q('stato'), confermato_per: quando ? new Date(quando).toISOString() : null, assegnato: q('assegnato') || null, messaggio: q('messaggio') || null, nota: q('nota') || null }).eq('id', fa.dataset.aid);
+      if (error) { toast('Salvataggio non riuscito: ' + error.message, 'ko'); return; }
+      await caricaCmd(sb); renderCmd(); toast(q('stato') === 'Confermato' ? 'Appuntamento confermato ✓ Il cittadino lo vede sul sito' : 'Appuntamento aggiornato ✓', 'ok'); return;
+    }
     const fl = e.target.closest('.cmd-lib-az');
     if (fl) {
       const controllo = e.submitter?.value, nota = String(new FormData(fl).get('nota') || '').trim(), sb = await db();
@@ -1753,7 +1974,7 @@
 
   /* ═════════════ ACCESSO AL SITO (Discord + verifica con screen) ═════════════ */
   // Chi non è verificato come membro della LSPD vede solo queste sezioni:
-  const VISTE_LIBERE = ['home', 'regolamento', 'bandi', 'comando', 'bloccato'];
+  const VISTE_LIBERE = ['home', 'regolamento', 'bandi', 'appuntamenti', 'comando', 'bloccato'];
   const ACC = { stato: DB_ATTIVO ? (LS.get('gu-acc', null)?.stato || 'ospite') : 'aperto', utente: null, riga: null };
   const accessoPieno = () => ['aperto', 'membro', 'comandante'].includes(ACC.stato);
   const puoVedere = v => accessoPieno() || VISTE_LIBERE.includes(v);
@@ -1775,7 +1996,7 @@
     $$('.nav a[data-v]').forEach(a => a.classList.toggle('chiuso', !puoVedere(a.dataset.v)));
     $$('a.cat, a.cap-a.esa').forEach(c => c.classList.toggle('chiuso', !puoVedere(risolvi(c.getAttribute('href').slice(1)).v)));
     const nc = $('.nav-cmd'); if (nc) nc.hidden = !(ACC.stato === 'comandante' || ACC.stato === 'aperto');
-    renderChip(); mostraDefcon(); if (ACC.utente) contaComunicazioni();
+    renderChip(); mostraDefcon(); if (ACC.utente) { contaComunicazioni(); contaAppAgenti(); }
     if (DB_ATTIVO) LS.set('gu-acc', { stato: ACC.stato });
     if (vista === 'bandi' && $('#candidatura').hidden) renderBandi();
     if (vista && !puoVedere(vista)) vai();

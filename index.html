@@ -45,6 +45,7 @@
         <a href="#regolamento" data-v="regolamento">Manuale</a>
         <a href="#strumenti" data-v="strumenti">Strumenti</a>
         <a href="#bandi" data-v="bandi">Bandi<span class="nav-num" id="nav-bandi" hidden></span></a>
+        <a href="#appuntamenti" data-v="appuntamenti">Appuntamenti<span class="nav-num" id="nav-app" hidden></span></a>
         <a href="#esami" data-v="esami">Esami</a>
         <a href="#accademia" data-v="accademia">Accademia<span class="nav-num" id="nav-acc" hidden></span></a>
         <a href="#reparti" data-v="reparti">Reparti<span class="nav-num" id="nav-rep" hidden></span></a>
@@ -140,6 +141,8 @@
         <a class="btn p" href="#bandi">Vai ai bandi →</a>
       </div>
     </section>
+
+    <a class="app-banda rivela" href="#appuntamenti"><span class="app-ico">📅</span><span><small>Per i cittadini</small><b>Hai bisogno della Polizia?</b><em>Denunce, porto d'armi, colloqui con un superiore, restituzione di beni: prenota un appuntamento in centrale.</em></span><span class="btn p">Prenota →</span></a>
 
     <div class="sez-testa rivela"><small>Il Dipartimento sul campo</small><h2>Come lavoriamo</h2><span class="sez-dx">Dalla centrale alla strada, dal cielo alle due ruote</span></div>
     <div class="lavoro">
@@ -953,6 +956,27 @@ Note:</pre></div>
   </div>
 </section>
 
+<section class="vista" id="v-appuntamenti" data-vista="appuntamenti" aria-label="Appuntamenti" hidden>
+  <div class="wrap">
+    <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/centrale-lspd.jpg')">
+      <div><small>Servizio ai cittadini</small><h1>Appuntamenti <span>in centrale</span></h1><p>Prenota un appuntamento con il Los Santos Police Department: denunce, porto d'armi, colloqui con un superiore e ogni altra richiesta. Ricevi un codice pratica e vedi qui la conferma con giorno, ora e agente.</p></div>
+    </div>
+    <div class="box vietato rivela" style="margin-top:18px"><b class="e">EMERGENZE</b><p>Questo modulo non è per le emergenze: in caso di pericolo chiama subito il <b>911</b> in città.</p></div>
+    <ol class="percorso rivela">
+      <li><b>1</b><span>Scegli il tipo</span><small>Cosa ti serve</small></li>
+      <li><b>2</b><span>Compila il modulo</span><small>Dati, disponibilità e motivo</small></li>
+      <li><b>3</b><span>Ricevi il codice</span><small>Conservalo</small></li>
+      <li><b>4</b><span>Conferma</span><small>Giorno, ora e agente</small></li>
+      <li><b>5</b><span>In centrale</span><small>Al desk di Mission Row</small></li>
+    </ol>
+    <div id="app-area"></div>
+    <div id="app-miei"></div>
+    <div class="sez-testa rivela"><small>Passo 1</small><h2>Di cosa hai bisogno?</h2></div>
+    <div class="app-tipi" id="app-tipi"></div>
+    <div id="app-modulo"></div>
+  </div>
+</section>
+
 <section class="vista" id="v-comando" data-vista="comando" aria-label="Area Comando" hidden>
   <div class="wrap"><div id="cmd"></div></div>
 </section>
@@ -983,7 +1007,7 @@ Note:</pre></div>
   <div class="in">
     <span class="emblema f-emblema"><img src="immagini/logo.png" alt="" onerror="this.remove()"><svg viewBox="0 0 150 170"><use href="#stemma"/></svg></span>
     <div><b>Los Santos Police Department · NOW V4</b>Manuale operativo LSPD · aggiornato al 14/11/2026</div>
-    <nav class="f-link"><a href="#regolamento">Manuale</a><a href="#strumenti">Strumenti</a><a href="#bandi">Bandi</a><a href="#esami">Esami</a><a href="#accademia">Accademia</a><a href="#reparti">Reparti</a></nav>
+    <nav class="f-link"><a href="#regolamento">Manuale</a><a href="#strumenti">Strumenti</a><a href="#bandi">Bandi</a><a href="#appuntamenti">Appuntamenti</a><a href="#esami">Esami</a><a href="#accademia">Accademia</a><a href="#reparti">Reparti</a></nav>
     <span class="f-rev">To protect and to serve</span>
   </div>
 </footer>
