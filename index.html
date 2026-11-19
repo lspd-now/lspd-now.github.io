@@ -45,10 +45,11 @@
         <a href="#regolamento" data-v="regolamento">Manuale</a>
         <a href="#strumenti" data-v="strumenti">Strumenti</a>
         <a href="#bandi" data-v="bandi">Bandi<span class="nav-num" id="nav-bandi" hidden></span></a>
-        <a href="#appuntamenti" data-v="appuntamenti">Appuntamenti<span class="nav-num" id="nav-app" hidden></span></a>
+        <a href="#appuntamenti" data-v="appuntamenti">Appuntamenti</a>
         <a href="#esami" data-v="esami">Esami</a>
         <a href="#accademia" data-v="accademia">Accademia<span class="nav-num" id="nav-acc" hidden></span></a>
         <a href="#reparti" data-v="reparti">Reparti<span class="nav-num" id="nav-rep" hidden></span></a>
+        <a href="#area-lspd" data-v="area" class="nav-area" hidden>🛡️ Area LSPD<span class="nav-num" id="nav-app" hidden></span></a>
         <a href="#comando" data-v="comando" class="nav-cmd"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Comando</a>
       </nav>
       <label class="cerca" for="q">
@@ -969,11 +970,20 @@ Note:</pre></div>
       <li><b>4</b><span>Conferma</span><small>Giorno, ora e agente</small></li>
       <li><b>5</b><span>In centrale</span><small>Al desk di Mission Row</small></li>
     </ol>
-    <div id="app-area"></div>
+    <a class="ag-link" id="ag-link" href="#area-lspd" hidden>🛡️ Sei un agente LSPD? Le richieste dei cittadini si gestiscono nell'<b>Area LSPD</b> →</a>
     <div id="app-miei"></div>
     <div class="sez-testa rivela"><small>Passo 1</small><h2>Di cosa hai bisogno?</h2></div>
     <div class="app-tipi" id="app-tipi"></div>
     <div id="app-modulo"></div>
+  </div>
+</section>
+
+<section class="vista" id="v-area" data-vista="area" aria-label="Area LSPD" hidden>
+  <div class="wrap">
+    <div class="pagina-testa con-foto" style="background-image:url('immagini/foto/agente-garage.jpg')">
+      <div><small>Personale LSPD · da Agente I al Capo della Polizia</small><h1>Area <span>LSPD</span></h1><p>Le richieste di appuntamento dei cittadini che riguardano il servizio: accettale, fissa giorno e ora e il cittadino vede la conferma con il tuo nome. I colloqui con un superiore li gestisce il Comando.</p></div>
+    </div>
+    <div id="app-area"></div>
   </div>
 </section>
 

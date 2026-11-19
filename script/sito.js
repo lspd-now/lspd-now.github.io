@@ -87,7 +87,7 @@
   };
   const FASCE = [
     ['Alto Comando', 'Decisioni strategiche e organizzazione', [['Capo della Polizia', 'CDP', 'Vertice del Dipartimento: decisioni strategiche e organizzazione interna.'], ['Vice Capo della Polizia', 'VCP', 'Affianca e sostituisce il Capo nella guida del Dipartimento.'], ['Comandante', 'CMD', 'Garantisce il corretto funzionamento dell\'intero corpo.']]],
-    ['Ufficiali', 'Coordinamento delle operazioni', [['Capitano', 'CPT', 'Coordina le operazioni sul campo e supervisiona gli agenti.'], ['Tenente', 'TEN', 'Assicura che le direttive del comando vengano applicate.']]],
+    ['Ufficiali', 'Coordinamento delle operazioni', [['Capitano', 'CPT', 'Coordina le operazioni sul campo e supervisiona gli agenti.'], ['Tenente', 'TEN', 'Assicura che gli ordini impartiti dal Comando vengano eseguiti e supervisiona gli operatori.']]],
     ['Sottufficiali', 'Supervisione della truppa', [['Sergente II', 'SG2', 'Supervisiona la truppa e coordina gli agenti sul campo.'], ['Sergente I', 'SG1', 'Garantisce il rispetto delle procedure durante le operazioni.']]],
     ['Truppa', 'Il personale in prima linea', [['Agente Coordinatore', 'III+1', 'Coordina le chiamate e indica alle ADAM dove convergere.'], ['Agente III', 'AG3', 'Agente esperto: pattugliamenti, controlli, arresti e interventi.'], ['Agente II', 'AG2', 'Agente operativo; può partecipare al bando S.W.A.T.'], ['Agente I', 'AG1', 'Agente operativo; può affiancare le Reclute in pattuglia.']]],
     ['Accademia', 'Formazione con le Risorse Umane', [['Recluta', 'REC', 'In formazione: mai in pattuglia senza affiancamento.']]],
@@ -273,7 +273,7 @@
   }
 
   /* ═════════════ VISTE E NAVIGAZIONE ═════════════ */
-  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), appuntamenti: $('#v-appuntamenti'), accademia: $('#v-accademia'), reparti: $('#v-reparti'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
+  const VISTE = { home: $('#v-home'), regolamento: $('#v-regolamento'), strumenti: $('#v-strumenti'), bandi: $('#v-bandi'), esami: $('#v-esami'), appuntamenti: $('#v-appuntamenti'), area: $('#v-area'), accademia: $('#v-accademia'), reparti: $('#v-reparti'), comando: $('#v-comando'), bloccato: $('#v-bloccato') };
   let vista = null;
   function risolvi(h) {
     if (!h || h === 'top' || h === 'home') return { v: 'home' };
@@ -289,6 +289,7 @@
     if (h === 'comando') return { v: 'comando' };
     if (h === 'accademia') return { v: 'accademia' };
     if (h === 'appuntamenti') return { v: 'appuntamenti' };
+    if (h === 'area-lspd') return { v: 'area' };
     if (h.startsWith('appuntamento-')) return { v: 'appuntamenti', tipo: h.slice(13) };
     if (h === 'reparti') return { v: 'reparti' };
     if (h.startsWith('reparto-')) return { v: 'reparti', rep: h.slice(8) };
@@ -338,6 +339,7 @@
     if (r.v === 'comando') areaComando();
     if (r.v === 'accademia') accademia();
     if (r.v === 'appuntamenti') appuntamenti(r.tipo);
+    if (r.v === 'area') areaAgenti();
     if (r.v === 'reparti') reparti(r.rep);
     if (!scorso && cambia) scrollTo({ top: 0, ...SALTA });
     rivela(); scorri();
@@ -1521,7 +1523,8 @@
     if (!$('#app-tipi')) return;
     if (tipo && TIPI_APP.some(t => t[0] === tipo)) APP.tipo = tipo;
     $('#app-tipi').innerHTML = TIPI_APP.map(([k, e, t, d, c]) => `<button type="button" class="app-t${APP.tipo === k ? ' on' : ''}" data-app="${k}"><span>${e}</span><b>${esc(t)}</b><small>${esc(d)}</small><em>Con: ${esc(c)}</em></button>`).join('');
-    renderModuloApp(); renderMieiApp(); areaAgenti();
+    renderModuloApp(); renderMieiApp();
+    const al = $('#ag-link'); if (al) al.hidden = !(DB_ATTIVO && sonoAgente());
   }
   function renderModuloApp() {
     const box = $('#app-modulo'); if (!box) return;
@@ -1606,7 +1609,7 @@
   const SUPERIORE = 'Colloquio con un superiore';
   const sonoAgente = () => ACC.stato === 'comandante' || (ACC.stato === 'membro' && !!ACC.riga?.grado && !/^recluta/i.test(ACC.riga.grado));
   const mioNomeAg = () => [ACC.riga?.grado, ACC.riga?.nome || ACC.utente?.nome].filter(Boolean).join(' ');
-  const AG = { lista: [], aperta: LS.get('lspd-ag-aperta', true), filtro: 'nuovi' };
+  const AG = { lista: [], aperta: true, filtro: 'nuovi' };
   async function caricaAgenti() {
     try { const sb = await db(); const { data } = await sb.from(T('appuntamenti')).select('*').order('creato', { ascending: false }).limit(300); AG.lista = (data || []).filter(x => x.tipo !== SUPERIORE); } catch { AG.lista = []; }
   }
@@ -1618,7 +1621,9 @@
   function badgeApp() { const n = AG.lista.filter(x => x.stato === 'Ricevuto').length, b = $('#nav-app'); if (b) { b.hidden = !n; b.textContent = n; } }
   async function areaAgenti() {
     const box = $('#app-area'); if (!box) return;
-    if (!DB_ATTIVO || !sonoAgente()) { box.innerHTML = ''; return; }
+    if (!DB_ATTIVO) { box.innerHTML = ''; return; }
+    if (!sonoAgente()) { box.innerHTML = `<div class="cmd-porta blocco"><div class="cmd-lucchetto">${LUCCHETTO}</div><small>Area LSPD</small><h2>Riservata da Agente I in su</h2><p>${ACC.riga?.grado ? `Il tuo grado registrato è <b>${esc(ACC.riga.grado)}</b>: l'Area LSPD si apre dal grado di Agente I.` : 'Accedi con Discord come membro verificato della LSPD.'} Se il grado è cambiato, chiedi al Comando di aggiornarlo.</p></div>`; return; }
+    box.innerHTML = '<p class="intro-s">Carico le richieste…</p>';
     await caricaAgenti(); badgeApp(); renderAgenti();
   }
   function renderAgenti() {
@@ -1996,6 +2001,9 @@
     $$('.nav a[data-v]').forEach(a => a.classList.toggle('chiuso', !puoVedere(a.dataset.v)));
     $$('a.cat, a.cap-a.esa').forEach(c => c.classList.toggle('chiuso', !puoVedere(risolvi(c.getAttribute('href').slice(1)).v)));
     const nc = $('.nav-cmd'); if (nc) nc.hidden = !(ACC.stato === 'comandante' || ACC.stato === 'aperto');
+    const na = $('.nav-area'); if (na) na.hidden = !(DB_ATTIVO && sonoAgente());
+    const al = $('#ag-link'); if (al) al.hidden = !(DB_ATTIVO && sonoAgente());
+    if (vista === 'area') areaAgenti();
     renderChip(); mostraDefcon(); if (ACC.utente) { contaComunicazioni(); contaAppAgenti(); }
     if (DB_ATTIVO) LS.set('gu-acc', { stato: ACC.stato });
     if (vista === 'bandi' && $('#candidatura').hidden) renderBandi();
@@ -2004,7 +2012,7 @@
   }
   function mostraBloccato(v) {
     mostraVista('bloccato');
-    const nome = { strumenti: 'Strumenti', esami: 'Esami', accademia: 'Accademia', reparti: 'Reparti' }[v] || 'Sezione riservata';
+    const nome = { strumenti: 'Strumenti', esami: 'Esami', accademia: 'Accademia', reparti: 'Reparti', area: 'Area LSPD' }[v] || 'Sezione riservata';
     const [t, c] = ETICH[ACC.stato] || ETICH.ospite;
     const testo = ACC.stato === 'in_verifica' ? 'Il tuo screen è in verifica: appena l\'Alto Comando lo approva, questa sezione si apre da sola.'
       : ACC.stato === 'rifiutato' ? `La verifica non è stata approvata${ACC.riga?.nota ? ` (${esc(ACC.riga.nota)})` : ''}. Puoi mandare un nuovo screen.`
