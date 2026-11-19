@@ -572,6 +572,7 @@
           <div><small>Chiusura</small><b>${dataB(b.chiusura)}</b></div>
           <div class="cd"><small>${st === 'aperto' ? 'Chiude tra' : st === 'spento' ? 'Stato' : 'Esito'}</small><b ${cd ? `data-cd="${cd}"` : ''}>${cd ? quanto(cd - Date.now()) : st === 'spento' ? 'In attesa di avvio' : (b.esito ? 'Concluso' : 'Chiuso')}</b></div>
         </div>
+        ${Array.isArray(b.galleria) && b.galleria.length ? `<div class="bc-gal">${b.galleria.map((f, i) => `<button type="button" data-bgal="${esc(b.id)}" data-i="${i}" aria-label="Foto ${i + 1} del bando"><img src="${esc(f.replace('immagini/foto/', 'immagini/foto/mini/'))}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
         ${b.esito ? `<p class="bc-nota" style="border-color:var(--verde);background:rgba(47,211,138,.06)">${esc(b.esito)}</p>` : ''}
         <details class="bc-dettagli" ${aperto === b.id ? 'open' : ''}><summary>Leggi il bando completo</summary>
           <div class="bc-corpo">
@@ -1298,6 +1299,11 @@
 
   /* ═════════════ REPARTI · H.S.U. e MARY (solo membri: i testi stanno nell'archivio protetto) ═════════════ */
   const REPARTI = { hsu: ['H.S.U.', '🚓', 'High Speed Unit', '#22d3ee'], mary: ['MARY', '🏍️', 'Unità motociclistica', '#ff9f43'], asd: ['A.S.D.', '🚁', 'Air Support Division', '#a78bfa'] };
+  const REP_FOTO = {
+    hsu: [['hsu-fronte', 'H.S.U. · supercar di servizio'], ['hsu-centrale', 'H.S.U. davanti alla centrale'], ['hsu-profilo', 'H.S.U. · pattuglia ad alta velocità'], ['hsu-alberi', 'H.S.U. in pattuglia']],
+    mary: [['mary-corsa', 'MARY · unità motociclistica in azione'], ['mary-centrale', 'MARY · motociclista davanti alla centrale']],
+    asd: [['asd-eliporto', 'A.S.D. · elicottero sull\'eliporto'], ['asd-pilota', 'A.S.D. · pilota pronto al decollo'], ['asd-retro', 'A.S.D. · controlli prima del volo'], ['asd-pilota-fianco', 'A.S.D. · equipaggio di volo'], ['asd-911', 'A.S.D. · Dial 911'], ['elicottero-fianco', 'Elicottero A.S.D. in servizio'], ['elicottero-tramonto', 'A.S.D. · volo al tramonto'], ['elicottero-palazzi', 'A.S.D. · sorvolo della città']],
+  };
   const REP = { id: 'hsu', scheda: 'comunicazioni', dati: {}, membri: [], corsi: [], miei: [], caricato: false, corso: null };
   const puoScrivereCom = sez => ACC.stato === 'comandante' || (sez !== 'accademia' && REP.miei.includes(sez));
   const gestisco = r => ACC.stato === 'comandante' || REP.miei.includes(r);
@@ -1336,7 +1342,7 @@
       <div class="rep-scelta">${Object.entries(REPARTI).map(([k, [s, e, n, c]]) => `<button type="button" class="rep-card${k === id ? ' on' : ''}" data-rep="${k}" style="--rc:${c}"><span class="rep-emo">${e}</span><span><b>${s}</b><small>${n} · ${membriRep(k).length} ${membriRep(k).length === 1 ? 'membro' : 'membri'}</small></span>${REP.miei.includes(k) && ACC.stato !== 'comandante' ? '<em>Responsabile</em>' : ''}</button>`).join('')}</div>
       <div class="rep-corpo" style="--rc:${col}">
         <nav class="rep-canali" aria-label="Canali ${esc(sig)}"><div class="rep-cat">${emo} ${esc(sig)}</div>${canali.map(([k, e, t]) => `<button type="button" data-rcan="${k}" class="${REP.scheda === k ? 'on' : ''}"><span class="hash">#</span>${e} ${esc(t)}${k === 'comunicazioni' && nuove ? `<i class="rep-n">${nuove}</i>` : ''}${k === 'gestione' ? ' 🔒' : ''}</button>`).join('')}</nav>
-        <div class="rep-vista">${D.foto ? `<div class="rep-banner" style="background-image:url('${esc(D.foto)}')"><span>${emo} ${esc(sig)}</span><b>${esc(nome)}</b></div>` : ''}${D.missione ? `<p class="rep-missione">${esc(D.missione)}</p>` : ''}${schedaRep(id, D, ges)}</div>
+        <div class="rep-vista">${(REP_FOTO[id]?.[0] ? `immagini/foto/${REP_FOTO[id][0][0]}.jpg` : D.foto) ? `<div class="rep-banner" style="background-image:url('${esc(REP_FOTO[id]?.[0] ? `immagini/foto/${REP_FOTO[id][0][0]}.jpg` : D.foto)}')"><span>${emo} ${esc(sig)}</span><b>${esc(nome)}</b></div>` : ''}${(REP_FOTO[id] || []).length > 1 ? `<div class="rep-foto">${REP_FOTO[id].map(([n, t], i) => `<button type="button" data-rfoto="${i}" aria-label="${esc(t)}"><img src="immagini/foto/mini/${n}.jpg" alt="" loading="lazy"></button>`).join('')}</div>` : ''}${D.missione ? `<p class="rep-missione">${esc(D.missione)}</p>` : ''}${schedaRep(id, D, ges)}</div>
       </div>`;
     rivela();
     if (REP.scheda === 'comunicazioni') segnaRepLette();
@@ -1659,7 +1665,7 @@
       ${a('requisiti', 'Requisiti', (v.requisiti || []).join('\n'), 'Uno per riga.')}
       ${a('preferenziali', 'Titoli preferenziali', (v.preferenziali || []).join('\n'), 'Uno per riga (facoltativo).')}
       ${a('fasi', 'Fasi della selezione', (v.fasi || []).map(f => f.join(' | ')).join('\n'), 'Una per riga, così: Titolo | descrizione')}
-      ${t('foto', 'Foto di copertina', v.foto, 'placeholder="es. immagini/foto/volanti.jpg"')}${t('note', 'Nota in fondo al bando', v.note)}${t('esito', 'Esito (per i bandi chiusi)', v.esito)}
+      ${t('foto', 'Foto di copertina', v.foto, 'placeholder="es. immagini/foto/volanti.jpg"')}${a('galleria', 'Galleria di foto del bando', (v.galleria || []).join('\n'), 'Una foto per riga (facoltativo), es. immagini/foto/asd-pilota.jpg')}${t('note', 'Nota in fondo al bando', v.note)}${t('esito', 'Esito (per i bandi chiusi)', v.esito)}
       </div><div class="cand-invia"><small>${b ? `Codice del bando: <code>${esc(b.id)}</code>` : 'Il codice del bando viene creato dal titolo.'}</small><button class="btn ghost" type="button" data-cmd="annulla-bando">Annulla</button><button class="btn p" type="submit">Salva bando</button></div></form>`;
   }
   async function salvaBando(form) {
@@ -1667,7 +1673,7 @@
     if (!g('titolo') || !g('chiusura')) { toast('Titolo e chiusura sono obbligatori', 'ko'); return; }
     const vecchio = C.bando !== 'nuovo' ? BANDI.find(b => b.id === C.bando) : null;
     const id = vecchio?.id || (g('titolo').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '-' + Date.now().toString(36).slice(-4));
-    const dati = { numero: g('numero'), titolo: g('titolo'), sottotitolo: g('sottotitolo'), apertoA: g('apertoA'), apertura: vecchio?.apertura || '', attivo: !!vecchio?.attivo, chiusura: g('chiusura'), posti: +g('posti') || 1, esameRichiesto: !!f.get('esameRichiesto'), interno: !!f.get('interno'), descrizione: g('descrizione'), requisiti: righe('requisiti'), preferenziali: righe('preferenziali'), fasi: righe('fasi').map(r => { const [x, ...d] = r.split('|'); return [x.trim(), d.join('|').trim()]; }), note: g('note'), esito: g('esito'), foto: g('foto') };
+    const dati = { numero: g('numero'), titolo: g('titolo'), sottotitolo: g('sottotitolo'), apertoA: g('apertoA'), apertura: vecchio?.apertura || '', attivo: !!vecchio?.attivo, chiusura: g('chiusura'), posti: +g('posti') || 1, esameRichiesto: !!f.get('esameRichiesto'), interno: !!f.get('interno'), descrizione: g('descrizione'), requisiti: righe('requisiti'), preferenziali: righe('preferenziali'), fasi: righe('fasi').map(r => { const [x, ...d] = r.split('|'); return [x.trim(), d.join('|').trim()]; }), note: g('note'), esito: g('esito'), foto: g('foto'), galleria: righe('galleria') };
     const sb = await db(); const { error } = await sb.from(T('bandi')).upsert({ id, dati, ordine: +g('ordine') || 0, aggiornato: new Date().toISOString() });
     if (error) { toast('Salvataggio non riuscito: ' + error.message, 'ko'); return; }
     toast(vecchio?.attivo ? 'Bando salvato ✓ Le modifiche sono già sul sito' : 'Bando salvato ✓ Premi «Avvia» quando vuoi aprirlo', 'ok'); C.bando = null; await caricaCmd(sb); nastro(); aggiornaBandiHome(); renderCmd();
@@ -2094,6 +2100,10 @@
     ['pattuglia-a-piedi', 'Pattuglia a piedi a Vinewood'], ['squadra-muretto', 'Squadra in pausa operativa'], ['agente-schiena', 'Los Santos Police · S.W.A.T. Team'],
     ['pattuglia-coppia', 'Pattuglia in coppia'], ['sorveglianza', 'Attività di osservazione'], ['agente-figura', 'Agente in centrale'],
     ['swat-orologio', 'Pronti all\'intervento'], ['squadra-pausa', 'Briefing informale'], ['agente-garage', 'Nel garage della centrale'],
+    ['centrale-lspd', 'La centrale LSPD di Mission Row'], ['hsu-fronte', 'H.S.U. · supercar di servizio'], ['mary-corsa', 'MARY · unità motociclistica in azione'],
+    ['asd-eliporto', 'A.S.D. · elicottero sull\'eliporto'], ['hsu-centrale', 'H.S.U. davanti alla centrale'], ['asd-pilota', 'A.S.D. · pilota pronto al decollo'],
+    ['hsu-profilo', 'H.S.U. · pattuglia ad alta velocità'], ['mary-centrale', 'MARY · motociclista davanti alla centrale'], ['asd-retro', 'A.S.D. · controlli prima del volo'],
+    ['hsu-alberi', 'H.S.U. in pattuglia'], ['asd-pilota-fianco', 'A.S.D. · equipaggio di volo'], ['asd-911', 'A.S.D. · Dial 911'],
     ['elicottero-fianco', 'Elicottero A.S.D. in servizio'], ['elicottero-tramonto', 'A.S.D. · volo al tramonto'], ['elicottero-palazzi', 'A.S.D. · sorvolo della città'],
     ['swat-team-schiena', 'S.W.A.T. Team'], ['agente-ritratto', 'Ritratto di servizio'], ['agente-murales', 'Agente a Los Santos'], ['agente-colori', 'Servizio fotografico LSPD'],
   ];
@@ -2120,6 +2130,12 @@
   document.addEventListener('click', e => {
     const gb = e.target.closest('[data-foto]');
     if (gb) { apriFoto(FOTO.map(([n, t]) => [`immagini/foto/${n}.jpg`, t]), +gb.dataset.foto); return; }
+    const bg = e.target.closest('[data-bgal]');
+    if (bg) { const b = BANDI.find(x => x.id === bg.dataset.bgal); if (b) apriFoto(b.galleria.map((f, i) => [f, `${b.titolo} · foto ${i + 1}`]), +bg.dataset.i); return; }
+    const lv = e.target.closest('.lav.grande');
+    if (lv) { e.preventDefault(); apriFoto([[$('img', lv).dataset.hd, 'La centrale LSPD di Mission Row']], 0); return; }
+    const rf = e.target.closest('[data-rfoto]');
+    if (rf) { const L = REP_FOTO[REP.id] || []; apriFoto(L.map(([n, t]) => [`immagini/foto/${n}.jpg`, t]), +rf.dataset.rfoto); return; }
     const fa = e.target.closest('.foto-art img');
     if (fa) { const tutte = $$('.foto-art img').filter(x => x.offsetParent); apriFoto(tutte.map(x => [x.dataset.grande || x.src, x.alt]), tutte.indexOf(fa)); return; }
     const b = e.target.closest('[data-lb]'); if (b) { const a = b.dataset.lb; if (a === 'chiudi') chiudiFoto(); else apriFoto(lbLista, lbI + (a === 'succ' ? 1 : -1)); return; }
